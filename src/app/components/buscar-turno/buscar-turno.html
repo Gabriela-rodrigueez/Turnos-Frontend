@@ -32,6 +32,15 @@
       <p class="text-sm text-gray-600 mt-1">Seleccioná la especialidad médica para consultar los días y horarios con disponibilidad.</p>
     </div>
 
+    <!-- Alertas de Error / Conflicto de Horario -->
+    <div *ngIf="mensajeError" class="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 flex items-start space-x-3">
+      <span class="text-lg">⚠️</span>
+      <div>
+        <p class="font-bold">No se pudo procesar la solicitud</p>
+        <p class="text-sm mt-0.5">{{ mensajeError }}</p>
+      </div>
+    </div>
+
     <!-- Sección de Búsqueda -->
     <section *ngIf="!turnoConfirmado" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sm:p-8">
       <div class="flex items-center justify-between pb-5 border-b border-gray-100 mb-6">
@@ -67,42 +76,50 @@
               <option [ngValue]="null">Todas las sedes</option>
               <option *ngFor="let sede of sedes" [ngValue]="sede.id">{{ sede.nombre }}</option>
             </select>
-          </div>div>
+          </div>
 
         </div>
 
-        <button (click)="buscar()" class="w-full py-3.5 rounded-lg bg-[#004a8a] hover:bg-[#00386b] text-white font-bold text-base transition-colors shadow-sm">
-          Buscar Horarios
+        <button (click)="buscar()" [disabled]="isLoading" class="w-full py-3.5 rounded-lg bg-[#004a8a] hover:bg-[#00386b] text-white font-bold text-base transition-colors shadow-sm disabled:opacity-50">
+          {{ isLoading ? 'Buscando...' : 'Buscar Horarios' }}
         </button>
       </div>
     </section>
 
-    <!-- Buscando -->
+    <!-- Estado de Carga -->
     <div *ngIf="isLoading" class="mt-6 p-8 text-center bg-blue-50/50 rounded-xl border border-blue-100">
-      <p class="text-[#004a8a] font-bold">Consultando agendas médicas...</p>
+      <p class="text-[#004a8a] font-bold">Consultando agendas médicas en tiempo real...</p>
     </div>
 
-    <!-- Resultados -->
+    <!-- Caso: Sin Disponibilidad -->
+    <div *ngIf="!isLoading && busquedaRealizada && turnosDisponibles.length === 0 && !turnoConfirmado && !mensajeError" class="mt-6 p-8 text-center bg-gray-50 rounded-xl border border-gray-200">
+      <p class="font-bold text-gray-700 text-lg">No hay turnos disponibles</p>
+      <p class="text-sm text-gray-500 mt-1">No se encontraron turnos libres para los criterios seleccionados. Intentá con otro profesional o sede.</p>
+    </div>
+
+    <!-- Caso: Resultados Disponibles -->
     <div *ngIf="!isLoading && busquedaRealizada && turnosDisponibles.length > 0 && !turnoConfirmado" class="mt-6">
       <h3 class="text-lg font-bold text-gray-900 mb-4">Horarios Disponibles:</h3>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div *ngFor="let turno of turnosDisponibles" class="bg-white border border-gray-200 p-5 rounded-xl shadow-sm flex justify-between items-center">
           <div>
-            <p class="font-bold text-gray-900">{{ turno.fechaHora }}</p>
-            <p class="text-xs text-gray-500 mt-1">Presencial</p>
+            <p class="font-bold text-gray-900">{{ turno.fechaHora || (turno.fecha + ' - ' + turno.hora + ' hs') }}</p>
+            <p class="text-xs text-gray-500 mt-1">{{ turno.profesionalNombre || 'Profesional asignado' }} • Presencial</p>
           </div>
-          <button (click)="confirmar(turno)" class="bg-blue-50 text-[#004a8a] font-bold px-5 py-2.5 rounded-lg hover:bg-[#004a8a] hover:text-white transition-colors">
+          <button (click)="confirmar(turno)" [disabled]="isLoading" class="bg-blue-50 text-[#004a8a] font-bold px-5 py-2.5 rounded-lg hover:bg-[#004a8a] hover:text-white transition-colors disabled:opacity-50">
             Elegir
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Confirmado -->
+    <!-- Caso: Confirmado Exitosamente -->
     <div *ngIf="turnoConfirmado" class="mt-6 bg-white p-8 rounded-xl shadow-sm border border-emerald-200 text-center">
-      <h2 class="text-2xl font-bold text-gray-900 mb-2">¡Reserva Exitosa!</h2>
-      <p class="font-bold text-[#004a8a] text-lg mb-6">{{ turnoConfirmado.fechaHora }}</p>
-      <button (click)="turnoConfirmado = null; busquedaRealizada = false;" class="px-6 border-2 border-[#004a8a] text-[#004a8a] font-bold py-2.5 rounded-lg hover:bg-blue-50">
+      <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3 text-xl font-bold">✓</div>
+      <h2 class="text-2xl font-bold text-gray-900 mb-1">¡Reserva Exitosa!</h2>
+      <p class="text-sm text-gray-500 mb-4">El turno quedó confirmado en el sistema.</p>
+      <p class="font-bold text-[#004a8a] text-lg mb-6">{{ turnoConfirmado.fechaHora || (turnoConfirmado.fecha + ' - ' + turnoConfirmado.hora + ' hs') }}</p>
+      <button (click)="reiniciarBusqueda()" class="px-6 border-2 border-[#004a8a] text-[#004a8a] font-bold py-2.5 rounded-lg hover:bg-blue-50 transition-colors">
         Realizar otra búsqueda
       </button>
     </div>

@@ -1,16 +1,34 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of, delay } from 'rxjs';
 
-// Moviendo las interfaces aquí para asegurar el éxito de la compilación
 export interface Especialidad { id: number; nombre: string; }
 export interface Profesional { id: number; nombre: string; apellido: string; especialidadId: number; }
 export interface Sede { id: number; nombre: string; }
-export interface Turno { id: number; fechaHora: string; profesionalId: number; sedeId: number; estado: 'DISPONIBLE' | 'RESERVADO'; }
+
+export interface Turno {
+  id: number;
+  fechaHora: string;
+  profesionalId?: number;
+  sedeId?: number;
+  estado?: 'DISPONIBLE' | 'RESERVADO';
+  [key: string]: any;
+}
+
+export interface ReservaTurnoRequestDTO {
+  turnoId: number;
+  pacienteId?: number;
+  [key: string]: any;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class TurnoService {
+  private http = inject(HttpClient);
+  private apiUrl = 'http://localhost:8080/api/v1/turnos';
+
+  // Catálogos auxiliares (se mantienen de soporte local hasta tener endpoints de catálogos)
   private especialidades: Especialidad[] = [
     { id: 1, nombre: 'Cardiología' },
     { id: 2, nombre: 'Pediatría General' }
@@ -26,19 +44,39 @@ export class TurnoService {
     { id: 2, nombre: 'CAPS N° 16 Godoy Cruz' }
   ];
 
-  private turnos: Turno[] = [
-    { id: 1, fechaHora: 'Mañana - 10:30 hs', profesionalId: 2, sedeId: 1, estado: 'DISPONIBLE' },
-    { id: 2, fechaHora: 'Viernes - 15:00 hs', profesionalId: 1, sedeId: 2, estado: 'DISPONIBLE' }
-  ];
+  getEspecialidades(): Observable<Especialidad[]> { 
+    return of(this.especialidades).pipe(delay(200)); 
+  }
 
-  getEspecialidades(): Observable<Especialidad[]> { return of(this.especialidades).pipe(delay(300)); }
-  getProfesionales(): Observable<Profesional[]> { return of(this.profesionales).pipe(delay(300)); }
-  getSedes(): Observable<Sede[]> { return of(this.sedes).pipe(delay(300)); }
-  
+  getProfesionales(): Observable<Profesional[]> { 
+    return of(this.profesionales).pipe(delay(200)); 
+  }
+
+  getSedes(): Observable<Sede[]> { 
+    return of(this.sedes).pipe(delay(200)); 
+  }
+
+  // 1. Llamada real a la API para consultar disponibilidad
   buscarTurnos(especialidadId: number, profesionalId?: number, sedeId?: number): Observable<Turno[]> {
-    let resultados = this.turnos;
-    if (profesionalId) resultados = resultados.filter(t => t.profesionalId === profesionalId);
-    if (sedeId) resultados = resultados.filter(t => t.sedeId === sedeId);
-    return of(resultados).pipe(delay(1500)); 
+    let params = new HttpParams().set('especialidadId', especialidadId.toString());
+
+    if (profesionalId) {
+      params = params.set('profesionalId', profesionalId.toString());
+    }
+    if (sedeId) {
+      params = params.set('sedeId', sedeId.toString());
+    }
+
+    return this.http.get<Turno[]>(`${this.apiUrl}/disponibilidad`, { params });
+  }
+
+  // 2. Llamada real para reservar turno
+  reservarTurno(payload: ReservaTurnoRequestDTO): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/reserva`, payload);
+  }
+
+  // 3. Llamada real para cancelar turno
+  cancelarTurno(id: number): Observable<any> {
+    return this.http.patch<any>(`${this.apiUrl}/${id}/cancelar`, {});
   }
 }
