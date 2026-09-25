@@ -40,14 +40,14 @@
       </div>
 
       <div class="space-y-6">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
           
           <!-- Seccion 1: Especialidad -->
           <div class="flex flex-col space-y-2">
             <label for="especialidad" class="text-sm font-semibold text-gray-700">Especialidad <span class="text-red-500">*</span></label>
             <select id="especialidad" name="especialidad" [(ngModel)]="espSeleccionada" class="w-full h-11 px-3 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-[#004a8a]">
-              <option [ngValue]="null">Seleccione especialidad</option>
-              <option *ngFor="let esp of especialidades" [ngValue]="esp.id">{{ esp.nombre }}</option>
+              <option [value]="null">Seleccione especialidad</option>
+              <option *ngFor="let esp of especialidades" [value]="esp.id">{{ esp.nombre }}</option>
             </select>
           </div>
 
@@ -55,8 +55,8 @@
           <div class="flex flex-col space-y-2">
             <label for="profesional" class="text-sm font-semibold text-gray-700">Profesional <span class="text-xs text-gray-500">(Opcional)</span></label>
             <select id="profesional" name="profesional" [(ngModel)]="profSeleccionado" class="w-full h-11 px-3 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-[#004a8a]">
-              <option [ngValue]="null">Cualquier profesional</option>
-              <option *ngFor="let prof of profesionales" [ngValue]="prof.id">{{ prof.nombre }} {{ prof.apellido }}</option>
+              <option [value]="null">Cualquier profesional</option>
+              <option *ngFor="let prof of profesionales" [value]="prof.id">{{ prof.nombre }} {{ prof.apellido }}</option>
             </select>
           </div>
 
@@ -64,28 +64,41 @@
           <div class="flex flex-col space-y-2">
             <label for="sede" class="text-sm font-semibold text-gray-700">Sede <span class="text-xs text-gray-500">(Opcional)</span></label>
             <select id="sede" name="sede" [(ngModel)]="sedeSeleccionada" class="w-full h-11 px-3 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-[#004a8a]">
-              <option [ngValue]="null">Todas las sedes</option>
-              <option *ngFor="let sede of sedes" [ngValue]="sede.id">{{ sede.nombre }}</option>
+              <option [value]="null">Todas las sedes</option>
+              <option *ngFor="let sede of sedes" [value]="sede.id">{{ sede.nombre }}</option>
             </select>
-          </div>div>
+          </div>
 
-        </div>
+          <!-- Seccion 4: Fecha-->
+          <div class="flex flex-col space-y-2">
+            <label for="fecha" class="text-sm font-semibold text-gray-700">Fecha <span class="text-xs text-gray-500">(Opcional)</span></label>
+            <input type="date" id="fecha" name="fecha" [(ngModel)]="fechaSeleccionada" class="w-full h-11 px-3 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-[#004a8a]" />
+          </div>
 
-        <button (click)="buscar()" class="w-full py-3.5 rounded-lg bg-[#004a8a] hover:bg-[#00386b] text-white font-bold text-base transition-colors shadow-sm">
+        </div> 
+
+        <button (click)="buscar()" class="w-full py-3.5 mt-6 rounded-lg bg-[#004a8a] hover:bg-[#00386b] text-white font-bold text-base transition-colors shadow-sm">
           Buscar Horarios
         </button>
       </div>
     </section>
 
-    <!-- Buscando -->
+    <!-- Cargando -->
     <div *ngIf="isLoading" class="mt-6 p-8 text-center bg-blue-50/50 rounded-xl border border-blue-100">
       <p class="text-[#004a8a] font-bold">Consultando agendas médicas...</p>
     </div>
 
     <!-- Resultados -->
-    <div *ngIf="!isLoading && busquedaRealizada && turnosDisponibles.length > 0 && !turnoConfirmado" class="mt-6">
+    <div *ngIf="!isLoading && busquedaRealizada && !turnoConfirmado" class="mt-6">
       <h3 class="text-lg font-bold text-gray-900 mb-4">Horarios Disponibles:</h3>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      
+      <!-- Mensaje si no hay turnos -->
+      <div *ngIf="turnosDisponibles.length === 0" class="bg-white border border-gray-200 p-6 rounded-xl text-center text-gray-500">
+        No hay turnos disponibles 
+      </div>
+
+      <!-- Lista de turnos -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" *ngIf="turnosDisponibles.length > 0">
         <div *ngFor="let turno of turnosDisponibles" class="bg-white border border-gray-200 p-5 rounded-xl shadow-sm flex justify-between items-center">
           <div>
             <p class="font-bold text-gray-900">{{ turno.fechaHora }}</p>
@@ -98,7 +111,7 @@
       </div>
     </div>
 
-    <!-- Confirmado -->
+    <!-- Confirmar -->
     <div *ngIf="turnoConfirmado" class="mt-6 bg-white p-8 rounded-xl shadow-sm border border-emerald-200 text-center">
       <h2 class="text-2xl font-bold text-gray-900 mb-2">¡Reserva Exitosa!</h2>
       <p class="font-bold text-[#004a8a] text-lg mb-6">{{ turnoConfirmado.fechaHora }}</p>

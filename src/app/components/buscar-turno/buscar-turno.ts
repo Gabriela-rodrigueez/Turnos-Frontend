@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Observable, of, delay } from 'rxjs';
 
-// Interfaces integradas para evitar errores de ruta en la compilación
+// Interfaces integradas 
 export interface Especialidad { id: number; nombre: string; }
 export interface Profesional { id: number; nombre: string; apellido: string; especialidadId: number; }
 export interface Sede { id: number; nombre: string; }
@@ -27,19 +27,16 @@ export class BuscarTurnoComponent implements OnInit {
   ];
 
   sedes: Sede[] = [
-    { id: 1, nombre: 'Hospital Central Mendoza' },
+    { id: 1, nombre: 'Hospital Central Mendoza' }, 
     { id: 2, nombre: 'CAPS N° 16 Godoy Cruz' }
   ];
 
-  turnosDisponibles: Turno[] = [
-    { id: 1, fechaHora: 'Mañana - 10:30 hs', profesionalId: 2, sedeId: 1, estado: 'DISPONIBLE' },
-    { id: 2, fechaHora: 'Viernes - 15:00 hs', profesionalId: 1, sedeId: 2, estado: 'DISPONIBLE' }
-  ];
+  turnosDisponibles: Turno[] = [];
 
   espSeleccionada: number | null = null;
   profSeleccionado: number | null = null;
   sedeSeleccionada: number | null = null;
-
+  fechaSeleccionada: string | null = null;
   isLoading = false;
   busquedaRealizada = false;
   turnoConfirmado: Turno | null = null;
@@ -51,17 +48,35 @@ export class BuscarTurnoComponent implements OnInit {
       alert('Seleccione una especialidad obligatoria');
       return;
     }
+
+    // Activa la pantalla de carga
     this.isLoading = true;
     this.busquedaRealizada = true;
     this.turnoConfirmado = null;
 
-    // Simulación de búsqueda con delay
+    // Simulacion de búsqueda
     setTimeout(() => {
-      this.isLoading = false;
-    }, 1500);
-  }
+      
+      // 1. Definimos 3 fechas que tienen turnos libres 
+      const fechasConTurno = ['2026-09-28', '2026-09-29', '2026-09-30'];
 
-  confirmar(turno: Turno) {
-    this.turnoConfirmado = turno;
+      // 2. Comprobar si el usuario seleccionó una fecha y si esa fecha está en nuestra lista
+      if (this.fechaSeleccionada && fechasConTurno.includes(this.fechaSeleccionada)) {
+        
+        // Si eligió el 28, 29 o 30 de septiembre, armamos los turnos con esa misma fecha
+        this.turnosDisponibles = [
+          { id: 1, fechaHora: `${this.fechaSeleccionada} - 10:30 hs`, profesionalId: 1, sedeId: 1, estado: 'DISPONIBLE' },
+          { id: 2, fechaHora: `${this.fechaSeleccionada} - 15:00 hs`, profesionalId: 2, sedeId: 2, estado: 'DISPONIBLE' }
+        ];
+
+      } else {
+        
+        // Si no puso fecha, o si puso cualquier otra fecha, la lista queda vacía (aparece el mensaje)
+        this.turnosDisponibles = []; 
+
+      }
+      
+      this.isLoading = false; 
+    }, 400);
   }
 }
