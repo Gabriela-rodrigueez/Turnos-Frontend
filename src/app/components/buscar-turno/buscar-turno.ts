@@ -2,23 +2,9 @@ import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpParams } from '@angular/common/http';
-
-export interface Especialidad {
-  id: number;
-  nombre: string;
-}
-
-export interface Profesional {
-  id: number;
-  nombre: string;
-  apellido: string;
-  especialidadId: number;
-}
-
-export interface Sede {
-  id: number;
-  nombre: string;
-}
+import { EspecialidadService, Especialidad } from '../../services/especialidad';
+import { SedeService, Sede } from '../../services/sede';
+import { ProfesionalService, Profesional } from '../../services/profesional';
 
 export interface Turno {
   id: number;
@@ -27,9 +13,11 @@ export interface Turno {
   hora?: string;
   profesionalId?: number;
   profesionalNombre?: string;
+  profesionalNombreCompleto?: string;
   sedeId?: number;
   sedeNombre?: string;
   especialidadId?: number;
+  especialidadNombre?: string;
   estado?: 'DISPONIBLE' | 'RESERVADO';
   [key: string]: any;
 }
@@ -43,23 +31,17 @@ export interface Turno {
 export class BuscarTurnoComponent implements OnInit {
   private http = inject(HttpClient);
   private cdr = inject(ChangeDetectorRef);
+  
+  private especialidadService = inject(EspecialidadService);
+  private sedeService = inject(SedeService);
+  private profesionalService = inject(ProfesionalService);
+  
   private apiUrl = 'http://localhost:8080/api/v1/turnos';
 
-  // Catálogos iniciales
-  especialidades: Especialidad[] = [
-    { id: 1, nombre: 'Cardiología' },
-    { id: 2, nombre: 'Pediatría General' }
-  ];
-
-  profesionales: Profesional[] = [
-    { id: 1, nombre: 'Ana', apellido: 'Silva', especialidadId: 2 },
-    { id: 2, nombre: 'Carlos', apellido: 'Ruiz', especialidadId: 1 }
-  ];
-
-  sedes: Sede[] = [
-    { id: 1, nombre: 'Hospital Central Mendoza' },
-    { id: 2, nombre: 'CAPS N° 16 Godoy Cruz' }
-  ];
+  // Catálogos dinámicos cargados desde la API
+  especialidades: Especialidad[] = [];
+  profesionales: Profesional[] = [];
+  sedes: Sede[] = [];
 
   turnosDisponibles: Turno[] = [];
 
@@ -68,12 +50,53 @@ export class BuscarTurnoComponent implements OnInit {
   sedeSeleccionada: number | null = null;
 
   isLoading = false;
+  isCatalogLoading = false;
   busquedaRealizada = false;
   turnoConfirmado: Turno | null = null;
   mensajeError: string | null = null;
   mensajeExito: string | null = null;
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.cargarCatalogos();
+  }
+
+  // Carga inicial de catálogos desde el backend
+  cargarCatalogos(): void {
+    this.isCatalogLoading = true;
+    
+    this.especialidadService.getEspecialidades().subscribe((esps) => {
+      this.especialidades = esps || [];
+      this.cdr.detectChanges();
+    });
+
+    this.sedeService.getSedes().subscribe((sedes) => {
+      this.sedes = sedes || [];
+      this.cdr.detectChanges();
+    });
+
+    this.cargarProfesionales();
+  }
+
+  // Filtrado dinámico de profesionales según especialidad y sede seleccionadas
+  cargarProfesionales(): void {
+    this.profesionalService.getProfesionales(this.espSeleccionada, this.sedeSeleccionada).subscribe((profs) => {
+      this.profesionales = profs || [];
+      // Si el profesional previamente seleccionado ya no pertenece a la lista filtrada, resetear
+      if (this.profSeleccionado && !this.profesionales.some((p) => p.id === this.profSeleccionado)) {
+        this.profSeleccionado = null;
+      }
+      this.isCatalogLoading = false;
+      this.cdr.detectChanges();
+    });
+  }
+
+  onEspecialidadChange(): void {
+    this.cargarProfesionales();
+  }
+
+  onSedeChange(): void {
+    this.cargarProfesionales();
+  }
 
   // 1. Llamada real para consultar disponibilidad
   buscar(): void {
@@ -127,7 +150,6 @@ export class BuscarTurnoComponent implements OnInit {
 
     console.log('Turno presionado:', turno);
 
-    // Se asegura una fecha y hora libre de colisiones con los registros precargados
     const fechaBase = (turno.fechaHora || turno.fecha_hora || '2026-10-05T16:00:00').toString();
     const fechaHoraValida = fechaBase.includes('T') ? fechaBase.split('T')[0] + 'T16:00:00' : '2026-10-05T16:00:00';
 
@@ -164,9 +186,9 @@ export class BuscarTurnoComponent implements OnInit {
         }
         this.cdr.detectChanges();
       }
-
     });
   }
+
   reiniciarBusqueda(): void {
     this.turnoConfirmado = null;
     this.busquedaRealizada = false;
@@ -175,4 +197,4 @@ export class BuscarTurnoComponent implements OnInit {
     this.turnosDisponibles = [];
     this.cdr.detectChanges();
   }
-}
+}

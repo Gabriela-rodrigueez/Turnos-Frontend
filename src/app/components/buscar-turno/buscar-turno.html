@@ -54,7 +54,7 @@
           <!-- Seccion 1: Especialidad -->
           <div class="flex flex-col space-y-2">
             <label for="especialidad" class="text-sm font-semibold text-gray-700">Especialidad <span class="text-red-500">*</span></label>
-            <select id="especialidad" name="especialidad" [(ngModel)]="espSeleccionada" class="w-full h-11 px-3 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-[#004a8a]">
+            <select id="especialidad" name="especialidad" [(ngModel)]="espSeleccionada" (change)="onEspecialidadChange()" class="w-full h-11 px-3 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-[#004a8a]">
               <option [ngValue]="null">Seleccione especialidad</option>
               <option *ngFor="let esp of especialidades" [ngValue]="esp.id">{{ esp.nombre }}</option>
             </select>
@@ -72,7 +72,7 @@
           <!-- Seccion 3: Sede -->
           <div class="flex flex-col space-y-2">
             <label for="sede" class="text-sm font-semibold text-gray-700">Sede <span class="text-xs text-gray-500">(Opcional)</span></label>
-            <select id="sede" name="sede" [(ngModel)]="sedeSeleccionada" class="w-full h-11 px-3 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-[#004a8a]">
+            <select id="sede" name="sede" [(ngModel)]="sedeSeleccionada" (change)="onSedeChange()" class="w-full h-11 px-3 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-[#004a8a]">
               <option [ngValue]="null">Todas las sedes</option>
               <option *ngFor="let sede of sedes" [ngValue]="sede.id">{{ sede.nombre }}</option>
             </select>
@@ -103,8 +103,12 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div *ngFor="let turno of turnosDisponibles" class="bg-white border border-gray-200 p-5 rounded-xl shadow-sm flex justify-between items-center">
           <div>
-            <p class="font-bold text-gray-900">{{ turno.fechaHora || (turno.fecha + ' - ' + turno.hora + ' hs') }}</p>
-            <p class="text-xs text-gray-500 mt-1">{{ turno.profesionalNombre || 'Profesional asignado' }} • Presencial</p>
+            <p class="font-bold text-gray-900">{{ turno.fechaHora ? (turno.fechaHora | date:'dd/MM/yyyy - HH:mm') + ' hs' : (turno.fecha + ' - ' + turno.hora + ' hs') }}</p>
+            <p class="text-xs text-gray-500 mt-1">
+              <span class="font-medium text-gray-800">{{ turno.profesionalNombreCompleto ? 'Dr/a. ' + turno.profesionalNombreCompleto : (turno.profesionalNombre || 'Sin profesional asignado') }}</span>
+              <span *ngIf="turno.sedeNombre"> • {{ turno.sedeNombre }}</span>
+              <span *ngIf="!turno.sedeNombre"> • Presencial</span>
+            </p>
           </div>
           <button (click)="confirmar(turno)" [disabled]="isLoading" class="bg-blue-50 text-[#004a8a] font-bold px-5 py-2.5 rounded-lg hover:bg-[#004a8a] hover:text-white transition-colors disabled:opacity-50">
             Elegir
