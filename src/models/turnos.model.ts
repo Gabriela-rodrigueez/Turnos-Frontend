@@ -22,3 +22,13 @@ export interface Turno {
   sedeId: number;
   estado: 'DISPONIBLE' | 'RESERVADO';
 }
+
+export interface TurnoPaciente {
+  id: number;
+  fecha: string;
+  hora: string;
+  profesionalNombre: string;
+  especialidad: string;
+  sede: string;
+  estado: 'RESERVADO' | 'CANCELADO' | 'COMPLETADO' | string;
+}
