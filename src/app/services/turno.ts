@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { Observable, of, delay } from 'rxjs';
 
 export interface Especialidad { id: number; nombre: string; }
@@ -27,6 +27,7 @@ export interface ReservaTurnoRequestDTO {
 export class TurnoService {
   private http = inject(HttpClient);
   private apiUrl = 'http://localhost:8080/api/v1/turnos';
+  private baseUrl = 'http://localhost:8080/api/v1';
 
   // Catálogos auxiliares (se mantienen de soporte local hasta tener endpoints de catálogos)
   private especialidades: Especialidad[] = [
@@ -78,5 +79,12 @@ export class TurnoService {
   // 3. Llamada real para cancelar turno
   cancelarTurno(id: number): Observable<any> {
     return this.http.patch<any>(`${this.apiUrl}/${id}/cancelar`, {});
+  }
+
+  //4. Llamada real para consultar los turnos asignados del paciente (F-04)
+  obtenerTurnosPaciente(pacienteId: number | string): Observable<HttpResponse<any[]>> {
+    return this.http.get<any[]>(`${this.baseUrl}/pacientes/${pacienteId}/turnos`, {
+      observe: 'response'
+    });
   }
 }

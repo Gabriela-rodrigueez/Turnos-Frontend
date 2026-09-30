@@ -1,0 +1,57 @@
+<div class="mis-turnos-page">
+  <div class="header-section">
+    <h2>Mis Turnos Agendados</h2>
+    <p class="subtitulo">Portal de Salud Mendoza - Gestión de citas ambulatorias</p>
+  </div>
+
+  <!-- Alertas -->
+  <div *ngIf="mensajeExito" class="alerta alerta-exito">
+    <span>✔ {{ mensajeExito }}</span>
+  </div>
+
+  <div *ngIf="errorMensaje" class="alerta alerta-error">
+    <span>✖ {{ errorMensaje }}</span>
+    <button class="btn-reintentar" (click)="cargarTurnos()">Reintentar</button>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="cargando" class="estado-contenedor">
+    <div class="spinner"></div>
+    <p>Cargando información sanitaria...</p>
+  </div>
+
+  <!-- Estado vacío (204 No Content) -->
+  <div *ngIf="!cargando && !errorMensaje && turnos.length === 0" class="estado-vacio">
+    <div class="icono-calendario">📅</div>
+    <h3>Sin turnos agendados</h3>
+    <p>No tienes ningún turno programado en este momento.</p>
+    <button class="btn btn-primario" (click)="irABuscarTurno()">
+      🔍 Buscar Turno
+    </button>
+  </div>
+
+  <!-- Grilla de Tarjetas -->
+  <div *ngIf="!cargando && turnos.length > 0" class="turnos-grid">
+    <div *ngFor="let turno of turnos" class="turno-card" [ngClass]="turno.estado.toLowerCase()">
+      <div class="card-header">
+        <span class="especialidad">{{ turno.especialidad }}</span>
+        <span class="badge" [ngClass]="turno.estado.toLowerCase()">{{ turno.estado }}</span>
+      </div>
+
+      <div class="card-body">
+        <p class="profesional">👨‍⚕️️ {{ turno.profesionalNombre }}</p>
+        <p class="sede">🏥 {{ turno.sede }}</p>
+        <div class="fecha-hora">
+          <span>🗓 {{ turno.fecha }}</span>
+          <span>⏰ {{ turno.hora }} hs</span>
+        </div>
+      </div>
+
+      <div class="card-footer" *ngIf="turno.estado === 'RESERVADO'">
+        <button class="btn btn-cancelar" (click)="solicitarCancelacion(turno)">
+          Cancelar Turno
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
