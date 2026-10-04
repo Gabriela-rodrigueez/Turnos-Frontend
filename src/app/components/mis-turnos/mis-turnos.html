@@ -1,10 +1,35 @@
 <div class="mis-turnos-page">
-  <div class="header-section">
-    <h2>Mis Turnos Agendados</h2>
-    <p class="subtitulo">Portal de Salud Mendoza - Gestión de citas ambulatorias</p>
+  <!-- Barra de Navegación y Encabezado -->
+  <div class="top-nav">
+    <div class="brand">
+      <span class="brand-title">SaludMza</span>
+      <span class="badge-oficial">Oficial</span>
+    </div>
+    <div class="nav-links">
+      <button class="btn btn-secundario" (click)="irABuscarTurno()">
+        🔍 Buscar Nuevo Turno
+      </button>
+    </div>
   </div>
 
-  <!-- Alertas -->
+  <div class="header-section">
+    <div>
+      <h2>Mis Turnos Agendados</h2>
+      <p class="subtitulo">Gestión y seguimiento de citas médicas ambulatorias - Provincia de Mendoza</p>
+    </div>
+
+    <!-- Selector de Paciente para Pruebas (Fácil conmutación entre con turnos y sin turnos 204) -->
+    <div class="paciente-selector">
+      <label for="selectPaciente">Paciente de prueba:</label>
+      <select id="selectPaciente" [ngModel]="pacienteId" (ngModelChange)="cambiarPaciente($event)" class="select-paciente">
+        <option [ngValue]="1">Paciente 1 - Juan González (Posee turnos)</option>
+        <option [ngValue]="2">Paciente 2 - Lucía Martínez (Sin turnos - Caso 204)</option>
+        <option [ngValue]="3">Paciente 3 - Mateo González (Sin turnos - Caso 204)</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Alertas de Éxito y Error -->
   <div *ngIf="mensajeExito" class="alerta alerta-exito">
     <span>✔ {{ mensajeExito }}</span>
   </div>
@@ -14,23 +39,23 @@
     <button class="btn-reintentar" (click)="cargarTurnos()">Reintentar</button>
   </div>
 
-  <!-- Loading -->
+  <!-- Indicador de Carga -->
   <div *ngIf="cargando" class="estado-contenedor">
     <div class="spinner"></div>
-    <p>Cargando información sanitaria...</p>
+    <p>Consultando sus turnos en el sistema hospitalario...</p>
   </div>
 
-  <!-- Estado vacío (204 No Content) -->
+  <!-- Estado Vacío (Respuesta 204 No Content / Sin turnos) -->
   <div *ngIf="!cargando && !errorMensaje && turnos.length === 0" class="estado-vacio">
     <div class="icono-calendario">📅</div>
     <h3>Sin turnos agendados</h3>
-    <p>No tienes ningún turno programado en este momento.</p>
+    <p>Actualmente no posees ningún turno médico programado en el sistema.</p>
     <button class="btn btn-primario" (click)="irABuscarTurno()">
-      🔍 Buscar Turno
+      🔍 Buscar y Solicitar Turno
     </button>
   </div>
 
-  <!-- Grilla de Tarjetas -->
+  <!-- Grilla de Tarjetas de Turnos -->
   <div *ngIf="!cargando && turnos.length > 0" class="turnos-grid">
     <div *ngFor="let turno of turnos" class="turno-card" [ngClass]="turno.estado.toLowerCase()">
       <div class="card-header">
@@ -39,18 +64,28 @@
       </div>
 
       <div class="card-body">
-        <p class="profesional">👨‍⚕️️ {{ turno.profesionalNombre }}</p>
+        <p class="profesional">👨‍⚕️ {{ turno.profesionalNombre }}</p>
         <p class="sede">🏥 {{ turno.sede }}</p>
+        
+        <div *ngIf="turno.motivoConsulta" class="motivo-consulta">
+          <small><strong>Motivo:</strong> {{ turno.motivoConsulta }}</small>
+        </div>
+
         <div class="fecha-hora">
           <span>🗓 {{ turno.fecha }}</span>
           <span>⏰ {{ turno.hora }} hs</span>
         </div>
       </div>
 
+      <!-- Botón de Cancelación solo para turnos activos (RESERVADO) -->
       <div class="card-footer" *ngIf="turno.estado === 'RESERVADO'">
-        <button class="btn btn-cancelar" (click)="solicitarCancelacion(turno)">
+        <button class="btn btn-cancelar" (click)="solicitarCancelacion(turno)" [disabled]="cargando">
           Cancelar Turno
         </button>
+      </div>
+      
+      <div class="card-footer card-footer-inactivo" *ngIf="turno.estado === 'CANCELADO'">
+        <span class="texto-cancelado">Turno cancelado</span>
       </div>
     </div>
   </div>

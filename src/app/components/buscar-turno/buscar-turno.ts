@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { EspecialidadService, Especialidad } from '../../services/especialidad';
 import { SedeService, Sede } from '../../services/sede';
@@ -25,7 +26,7 @@ export interface Turno {
 @Component({
   selector: 'app-buscar-turno',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './buscar-turno.html'
 })
 export class BuscarTurnoComponent implements OnInit {
