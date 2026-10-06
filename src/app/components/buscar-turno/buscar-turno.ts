@@ -6,6 +6,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { EspecialidadService, Especialidad } from '../../services/especialidad';
 import { SedeService, Sede } from '../../services/sede';
 import { ProfesionalService, Profesional } from '../../services/profesional';
+import { AuthService } from '../../services/auth';
 
 export interface Turno {
   id: number;
@@ -36,6 +37,7 @@ export class BuscarTurnoComponent implements OnInit {
   private especialidadService = inject(EspecialidadService);
   private sedeService = inject(SedeService);
   private profesionalService = inject(ProfesionalService);
+  public authService = inject(AuthService);
   
   private apiUrl = 'http://localhost:8080/api/v1/turnos';
 
@@ -155,7 +157,7 @@ export class BuscarTurnoComponent implements OnInit {
     const fechaHoraValida = fechaBase.includes('T') ? fechaBase.split('T')[0] + 'T16:00:00' : '2026-10-05T16:00:00';
 
     const body = {
-      pacienteId: 1,
+      pacienteId: this.authService.getPacienteId() || 1,
       profesionalId: Number(turno.profesionalId || turno.profesional_id || 1),
       especialidadId: Number(turno.especialidadId || turno.especialidad_id || this.espSeleccionada || 1),
       sedeId: Number(turno.sedeId || turno.sede_id || 1),

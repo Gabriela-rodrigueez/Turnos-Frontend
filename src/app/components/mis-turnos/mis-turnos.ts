@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TurnoService } from '../../services/turno';
+import { AuthService } from '../../services/auth';
 
 export interface TurnoPaciente {
   id: number;
@@ -28,7 +29,9 @@ export class MisTurnosComponent implements OnInit {
   cargando: boolean = false;
   errorMensaje: string = '';
   mensajeExito: string = '';
-  pacienteId: number = 1; // ID de prueba por defecto (Paciente 1 tiene turnos en data.sql)
+  pacienteId: number = 1;
+
+  private authService = inject(AuthService);
 
   constructor(
     private turnoService: TurnoService,
@@ -37,6 +40,10 @@ export class MisTurnosComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    const dynamicPacienteId = this.authService.getPacienteId();
+    if (dynamicPacienteId) {
+      this.pacienteId = dynamicPacienteId;
+    }
     this.cargarTurnos();
   }
 
@@ -133,7 +140,12 @@ export class MisTurnosComponent implements OnInit {
   }
 
   cambiarPaciente(id: number): void {
-    this.pacienteId = id;
+    if (this.authService.hasRole(['PACIENTE'])) {
+      const myId = this.authService.getPacienteId();
+      this.pacienteId = myId ? myId : this.pacienteId;
+    } else {
+      this.pacienteId = id;
+    }
     this.cargarTurnos();
   }
 
