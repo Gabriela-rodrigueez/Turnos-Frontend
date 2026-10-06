@@ -1,0 +1,213 @@
+<div class="min-h-screen bg-slate-100 font-sans flex antialiased text-slate-800">
+
+  <!-- ========================================================================= -->
+  <!-- SIDEBAR IZQUIERDO FIJO (Blanco / Surface-Container-Lowest) -->
+  <!-- ========================================================================= -->
+  <aside class="w-64 bg-white border-r border-slate-200 text-slate-700 flex-shrink-0 flex flex-col justify-between shadow-sm fixed inset-y-0 left-0 z-30">
+    <div class="flex flex-col flex-1 overflow-y-auto custom-scrollbar">
+      
+      <!-- Branding Institucional: Hospital Mendoza - Gestión Administrativa -->
+      <div class="p-5 border-b border-slate-200 bg-white">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-sky-700 text-white flex items-center justify-center shadow-sm">
+            <span class="material-symbols-outlined text-2xl">local_hospital</span>
+          </div>
+          <div class="leading-tight">
+            <span class="text-[10px] font-bold tracking-wider uppercase text-sky-800">Hospital Mendoza</span>
+            <h1 class="text-sm font-black text-slate-900 tracking-tight">Gestión Administrativa</h1>
+            <p class="text-[11px] text-slate-400 font-medium">SIGHO • Mendoza Salud</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botón Azul Superior Destacado: + Nueva Cita / Admisión -->
+      <div class="p-4 pb-2">
+        <a 
+          routerLink="/admin/nueva-cita"
+          class="w-full py-3 px-4 rounded-xl bg-sky-700 hover:bg-sky-800 active:bg-sky-900 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-sm flex items-center justify-center space-x-2 cursor-pointer group">
+          <span class="material-symbols-outlined text-lg group-hover:rotate-90 transition-transform">add_circle</span>
+          <span>+ Nueva Cita / Admisión</span>
+        </a>
+      </div>
+
+      <!-- Navegación Lateral -->
+      <nav class="px-3 py-2 space-y-1 text-xs">
+        <p class="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider my-2">Módulos Hospitalarios</p>
+
+        <!-- 1. Panel Principal -->
+        <a 
+          routerLink="/admin/panel-principal" 
+          routerLinkActive="bg-sky-700 text-white font-bold shadow-xs"
+          class="flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors cursor-pointer">
+          <span class="material-symbols-outlined text-xl">dashboard</span>
+          <span>Panel Principal</span>
+        </a>
+
+        <!-- 2. Gestión de Agendas y Cupos -->
+        <a 
+          class="flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors cursor-pointer">
+          <span class="material-symbols-outlined text-xl">calendar_month</span>
+          <span>Gestión de Agendas y Cupos</span>
+        </a>
+
+        <!-- 3. Registro y Validación (con badge '14 pendientes') -->
+        <a 
+          routerLink="/admin/registro-validacion" 
+          routerLinkActive="bg-sky-700 text-white font-bold shadow-xs"
+          class="flex items-center justify-between px-3 py-2.5 rounded-lg font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors cursor-pointer">
+          <div class="flex items-center space-x-3">
+            <span class="material-symbols-outlined text-xl">verified_user</span>
+            <span>Registro y Validación</span>
+          </div>
+          <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+            {{ pendientesValidacion }}
+          </span>
+        </a>
+
+        <!-- 4. Control de Stock / Farmacia -->
+        <a 
+          class="flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors cursor-pointer">
+          <span class="material-symbols-outlined text-xl">medication</span>
+          <span>Control de Stock / Farmacia</span>
+        </a>
+
+        <!-- 5. Rendimiento Hospitalario -->
+        <a 
+          class="flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors cursor-pointer">
+          <span class="material-symbols-outlined text-xl">monitoring</span>
+          <span>Rendimiento Hospitalario</span>
+        </a>
+
+        <p class="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider pt-3 pb-1">Configuración y Usuario</p>
+
+        <!-- 6. Mi Perfil -->
+        <a 
+          class="flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors cursor-pointer">
+          <span class="material-symbols-outlined text-xl">person</span>
+          <span>Mi Perfil</span>
+        </a>
+
+        <!-- 7. Configuración Institucional -->
+        <a 
+          class="flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors cursor-pointer">
+          <span class="material-symbols-outlined text-xl">settings</span>
+          <span>Configuración Institucional</span>
+        </a>
+      </nav>
+
+      <!-- Panel de Pruebas de Roles (Para validar AdminGuard) -->
+      <div class="p-3 mx-3 my-2 rounded-xl bg-slate-50 border border-slate-200 text-xs">
+        <div class="flex items-center justify-between text-slate-700 font-bold mb-1.5">
+          <span class="flex items-center space-x-1">
+            <span class="material-symbols-outlined text-sm text-sky-700">shield_person</span>
+            <span>Simulador de Roles</span>
+          </span>
+          <span class="text-[9px] bg-sky-100 text-sky-800 px-1 py-0.5 rounded font-mono">AdminGuard</span>
+        </div>
+        <div class="grid grid-cols-2 gap-1 mb-1.5">
+          <button (click)="cambiarRolPrueba('ADMIN')" class="px-1.5 py-1 rounded bg-sky-700 hover:bg-sky-800 text-[10px] font-bold text-white transition-colors">
+            🛡️ Admin
+          </button>
+          <button (click)="cambiarRolPrueba('MEDICO')" class="px-1.5 py-1 rounded bg-teal-700 hover:bg-teal-800 text-[10px] font-bold text-white transition-colors">
+            🩺 Médico
+          </button>
+        </div>
+        <button (click)="cambiarRolPrueba('PACIENTE')" class="w-full px-1.5 py-1 rounded bg-rose-50 hover:bg-rose-100 text-[10px] font-bold text-rose-800 border border-rose-300 transition-colors" title="Bloquea acceso y redirige a /">
+          🚫 Probar Bloqueo (PACIENTE)
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Pie del Sidebar: Ficha de Usuario y Cerrar Sesión -->
+    <div class="p-3.5 border-t border-slate-200 bg-slate-50/70 text-xs">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-2.5 overflow-hidden">
+          <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-sky-700 to-blue-600 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-xs">
+            MG
+          </div>
+          <div class="truncate">
+            <p class="font-bold text-slate-900 leading-tight truncate">{{ operadorNombre }}</p>
+            <p class="text-[10px] text-slate-500 font-mono">Legajo {{ operadorLegajo }}</p>
+          </div>
+        </div>
+        <button 
+          (click)="cerrarSesion()" 
+          class="p-1.5 text-slate-400 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+          title="Cerrar Sesión">
+          <span class="material-symbols-outlined text-lg">logout</span>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ========================================================================= -->
+  <!-- CONTENEDOR DERECHO (Header Superior + Router Outlet para Rutas Hijas) -->
+  <!-- ========================================================================= -->
+  <div class="flex-1 ml-64 flex flex-col min-w-0 min-h-screen">
+
+    <!-- Header Superior (Blanco con Selector de Sede y Campana) -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-20 shadow-xs">
+      <div class="px-6 py-3 flex items-center justify-between">
+        
+        <!-- Título Institucional y Área -->
+        <div class="flex items-center space-x-3">
+          <span class="material-symbols-outlined text-sky-700 text-2xl">apartment</span>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h2 class="text-sm font-bold text-slate-900 tracking-tight">Hospital Central de Mendoza</h2>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-sky-100 text-sky-800 border border-sky-200">
+                Área de Admisión Central
+              </span>
+            </div>
+            <p class="text-[11px] text-slate-500">Módulo de Recepción, Asignación y Empadronamiento Provincial</p>
+          </div>
+        </div>
+
+        <!-- Selector de Sede y Acciones -->
+        <div class="flex items-center space-x-4">
+          
+          <!-- Selector de Sede Hospitalaria -->
+          <div class="hidden sm:flex items-center space-x-2">
+            <label class="text-xs font-bold text-slate-500 uppercase">Sede:</label>
+            <select 
+              [(ngModel)]="sedeSeleccionada" 
+              class="h-9 pl-3 pr-7 rounded-lg border border-slate-300 bg-slate-50 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-sky-600 focus:outline-none">
+              <option *ngFor="let s of sedesList" [value]="s">{{ s }}</option>
+            </select>
+          </div>
+
+          <!-- Reloj en vivo -->
+          <div class="text-right hidden md:block">
+            <div class="text-xs font-mono font-bold text-slate-800">{{ horaActual }} hs</div>
+            <div class="text-[10px] text-slate-400">En línea</div>
+          </div>
+
+          <div class="h-6 w-px bg-slate-200"></div>
+
+          <!-- Campana de Notificaciones -->
+          <button class="relative p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer" title="Notificaciones del Sistema">
+            <span class="material-symbols-outlined text-xl">notifications</span>
+            <span class="absolute top-1 right-1 w-2 h-2 bg-sky-600 rounded-full animate-ping"></span>
+            <span class="absolute top-1 right-1 w-2 h-2 bg-sky-600 rounded-full"></span>
+          </button>
+
+          <!-- Enlace rápido a Portal Público -->
+          <a routerLink="/" class="px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-900 text-xs font-semibold transition-colors flex items-center space-x-1" title="Ir al Portal de Turnos">
+            <span class="material-symbols-outlined text-base">public</span>
+            <span class="hidden lg:inline">Portal Ciudadano</span>
+          </a>
+
+        </div>
+
+      </div>
+    </header>
+
+    <!-- ÁREA DE CONTENIDO DINÁMICO (ROUTER-OUTLET) -->
+    <main class="flex-1 bg-slate-100/70">
+      <router-outlet></router-outlet>
+    </main>
+
+  </div>
+
+</div>

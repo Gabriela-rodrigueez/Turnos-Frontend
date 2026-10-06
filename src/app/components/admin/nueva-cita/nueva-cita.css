@@ -1,0 +1,23 @@
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.animate-call-ticket {
+  animation: ticket-highlight 1.5s ease-in-out;
+}
+
+@keyframes ticket-highlight {
+  0% { transform: scale(0.95); background-color: #fef08a; }
+  50% { transform: scale(1.04); background-color: #fef9c3; }
+  100% { transform: scale(1); }
+}

@@ -1,24 +1,31 @@
 import { Routes } from '@angular/router';
 import { BuscarTurnoComponent } from './components/buscar-turno/buscar-turno';
 import { MisTurnosComponent } from './components/mis-turnos/mis-turnos';
-import { AdminComponent } from './components/admin/admin';
+import { AdminLayoutComponent } from './components/admin/admin-layout/admin-layout';
+import { PanelPrincipalComponent } from './components/admin/panel-principal/panel-principal';
+import { NuevaCitaComponent } from './components/admin/nueva-cita/nueva-cita';
+import { RegistroValidacionComponent } from './components/admin/registro-validacion/registro-validacion';
 import { AdminGuard } from './guards/admin.guard';
 
 export const routes: Routes = [
-  // Ruta por defecto: Carga la vista principal del buscador de turnos
+  // Ruta por defecto: Portal Ciudadano de Turnos
   { path: '', component: BuscarTurnoComponent, pathMatch: 'full' },
-  
-  // Rutas del portal de pacientes
   { path: 'mis-turnos', component: MisTurnosComponent },
 
-  // Ruta administrativa y mostrador protegida con AdminGuard
+  // Módulo Administrativo: Shell Común con Rutas Hijas (Layout con Header y Sidebar fijos)
   { 
     path: 'admin', 
-    component: AdminComponent, 
-    canActivate: [AdminGuard] 
+    component: AdminLayoutComponent, 
+    canActivate: [AdminGuard],
+    children: [
+      { path: '', redirectTo: 'panel-principal', pathMatch: 'full' },
+      { path: 'panel-principal', component: PanelPrincipalComponent },
+      { path: 'nueva-cita', component: NuevaCitaComponent },
+      { path: 'registro-validacion', component: RegistroValidacionComponent }
+    ]
   },
 
-  // Redirecciones explícitas de rutas de autenticación y registro hacia rutas existentes del proyecto
+  // Redirecciones explícitas de autenticación hacia rutas existentes
   { path: 'auth/registro-paciente', redirectTo: '' },
   { path: 'auth/registro', redirectTo: '' },
   { path: 'registro-paciente', redirectTo: '' },
@@ -26,6 +33,6 @@ export const routes: Routes = [
   { path: 'login', redirectTo: '' },
   { path: 'auth/login', redirectTo: '' },
 
-  // Ruta comodín para capturar cualquier URL desconocida y evitar pantalla en blanco
+  // Ruta comodín ante URLs no coincidentes
   { path: '**', redirectTo: '' }
 ];
