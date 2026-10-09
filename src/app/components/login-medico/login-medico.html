@@ -1,0 +1,57 @@
+<!-- Agregamos un contenedor principal para mantener el fondo cuadriculado y el centrado -->
+<div class="min-h-screen flex items-center justify-center p-4 sm:p-6 antialiased text-slate-800" style="background-color: #f7f9fc; background-image: radial-gradient(#d4ddeb 1.2px, transparent 1.2px); background-size: 24px 24px;">
+  
+  <main class="w-full max-w-[450px]">
+    <!-- Tarjeta del Login -->
+    <div class="bg-white rounded-xl shadow-xl shadow-slate-200/60 border border-slate-200/80 overflow-hidden flex flex-col">
+      
+      <header class="bg-[#eef5fc] pt-8 pb-7 px-8 flex flex-col items-center text-center border-b border-blue-50">
+        <h1 class="text-2xl font-bold tracking-tight text-[#0a2540]">Acceso Médico</h1>
+      </header>
+      
+      <section class="p-7 sm:px-9 flex flex-col gap-5 bg-white">
+        <form [formGroup]="loginForm" (ngSubmit)="iniciarSesion()" class="space-y-4">
+          
+          <div class="space-y-1.5">
+            <label class="block text-xs font-semibold text-slate-800" for="identifier">Matrícula Profesional o Usuario</label>
+            <div class="relative rounded-md shadow-sm">
+              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              </div>
+              <input formControlName="matricula" class="block w-full rounded-md border border-slate-300 pl-10 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#005a9c] focus:ring-1 focus:ring-[#005a9c] focus:outline-none transition-colors py-2.5" id="identifier" name="identifier" placeholder="Ej. M-12345" type="text">
+            </div>
+          </div>
+  
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between">
+                <label class="block text-xs font-semibold text-slate-800" for="password">Contraseña</label>
+                <a (click)="recuperarClave($event)" class="text-[11px] sm:text-xs font-medium text-slate-600 hover:text-[#005a9c] transition-colors focus:outline-none focus:underline cursor-pointer">¿Olvidó su contraseña?</a>
+              </div>
+            <div class="relative rounded-md shadow-sm">
+              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              </div>
+              <input formControlName="password" [type]="mostrarClave ? 'text' : 'password'" class="block w-full rounded-md border border-slate-300 pl-10 pr-10 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#005a9c] focus:ring-1 focus:ring-[#005a9c] focus:outline-none tracking-widest py-2.5" id="password" name="password" placeholder="••••••••">
+              <button (click)="toggleClave()" aria-label="Mostrar u ocultar contraseña" class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none" type="button">
+                <svg *ngIf="!mostrarClave" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round"></path><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                <svg *ngIf="mostrarClave" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.978 9.978 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"></path></svg>
+              </button>
+            </div>
+            </div>
+  
+            <div class="pt-2">
+              <button class="w-full inline-flex items-center justify-center gap-2 rounded-md bg-[#005a9c] py-2.5 px-4 text-xs sm:text-sm font-semibold text-white shadow-sm hover:bg-[#004c85] focus:outline-none focus:ring-2 focus:ring-[#005a9c] focus:ring-offset-2 transition-colors cursor-pointer" type="submit">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" stroke-linecap="round" stroke-linejoin="round" transform="rotate(180 12 12)"></path></svg>
+                <span>Ingresar al Panel Clínico</span>
+              </button>
+            </div>
+        </form>
+      </section>
+    </div>
+    
+    <!-- Botón extra para volver al portal fácilmente -->
+    <div class="mt-6 text-center">
+      <a routerLink="/" class="text-sm font-medium text-slate-500 hover:text-[#0a2540] transition-colors">← Volver al Portal de Selección</a>
+    </div>
+  </main>
+</div>

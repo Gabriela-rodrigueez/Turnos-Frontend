@@ -1,0 +1,64 @@
+<div class="bg-slate-100 min-h-screen flex flex-col items-center justify-center p-4 relative" style="background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 24px 24px;">
+  
+  <!-- Tarjeta de Login Administración -->
+  <main class="w-full max-w-[440px] bg-white rounded-2xl shadow-xl border border-slate-200/80 overflow-hidden relative z-10 transition-all duration-200">
+    
+    <!-- Encabezado con fondo celeste suave -->
+    <header class="bg-[#f0f6fc] border-b border-slate-100 px-8 pt-8 pb-7 text-center flex flex-col items-center">
+      <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Acceso Administración</h1>
+    </header>
+    
+    <!-- Contenido del formulario -->
+    <section class="p-6 sm:p-8 space-y-5 bg-white">
+      <form [formGroup]="loginForm" (ngSubmit)="iniciarSesion()" class="space-y-4">
+        
+        <!-- Campo: Legajo / Usuario de Red -->
+        <div class="space-y-1.5 text-left">
+          <label class="block text-xs font-semibold text-slate-700 tracking-wide" for="legajo-admin">Legajo / Usuario de Red</label>
+          <div class="relative rounded-lg">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+              <span class="material-symbols-outlined text-xl">badge</span>
+            </div>
+            <input formControlName="legajo" class="w-full pl-11 pr-4 py-2.5 bg-white text-slate-800 rounded-lg text-sm border border-slate-300 focus:border-[#005a9c] focus:ring-2 focus:ring-[#005a9c]/20 outline-none transition placeholder-slate-400" id="legajo-admin" name="legajo" placeholder="Ej: L-123456" type="text"/>
+          </div>
+        </div>
+  
+        <!-- Campo: Contraseña -->
+        <div class="space-y-1.5 text-left">
+          <div class="flex items-center justify-between">
+            <label class="block text-xs font-semibold text-slate-700 tracking-wide" for="password-admin">Contraseña</label>
+            <a (click)="recuperarClave($event)" class="text-xs font-medium text-[#005a9c] hover:text-[#0284c7] hover:underline transition-colors cursor-pointer">¿Olvidó su clave?</a>
+          </div>
+          <div class="relative rounded-lg">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+              <span class="material-symbols-outlined text-xl">lock</span>
+            </div>
+            
+            <!-- Input con el [type] dinámico -->
+            <input formControlName="password" [type]="mostrarClave ? 'text' : 'password'" class="w-full pl-11 pr-11 py-2.5 bg-white text-slate-800 rounded-lg text-sm border border-slate-300 focus:border-[#005a9c] focus:ring-2 focus:ring-[#005a9c]/20 outline-none transition placeholder-slate-400 font-mono" id="password-admin" name="password" placeholder="••••••••">
+            
+            <!-- Botón del ojito -->
+            <button (click)="toggleClave()" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none" type="button" title="Mostrar / ocultar contraseña">
+              <span *ngIf="!mostrarClave" class="material-symbols-outlined text-xl">visibility</span>
+              <span *ngIf="mostrarClave" class="material-symbols-outlined text-xl">visibility_off</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Botón de Acceso -->
+        <div class="pt-2">
+          <button class="group w-full flex items-center justify-center gap-2 py-3 px-5 rounded-lg bg-[#005a9c] hover:bg-[#00487d] text-white font-semibold text-sm tracking-wide shadow-md shadow-blue-900/15 hover:shadow-lg transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-[#005a9c] focus:ring-offset-2" type="submit">
+            <span>Acceder</span>
+            <span class="material-symbols-outlined text-lg transition-transform group-hover:translate-x-1 duration-150">login</span>
+          </button>
+        </div>
+
+      </form>
+    </section> 
+  </main>
+
+  <!-- Botón extra para volver al portal -->
+  <div class="mt-6 text-center relative z-10">
+    <a routerLink="/" class="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">← Volver al Portal de Selección</a>
+  </div>
+</div>

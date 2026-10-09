@@ -1,0 +1,70 @@
+<main class="min-h-screen flex flex-col items-center justify-center w-full bg-slate-50">
+  <section class="w-full max-w-[480px] min-h-screen sm:min-h-0 sm:my-10 flex flex-col justify-between px-8 sm:px-10 py-10 bg-white sm:rounded-2xl sm:shadow-lg sm:border sm:border-slate-100" data-purpose="login-form-wrapper">
+    <div class="flex-1 flex flex-col justify-center items-center w-full">
+      <div class="py-8 max-w-[420px] w-full mx-auto">
+        <div class="mb-7">
+          <h1 class="text-[22px] sm:text-2xl font-bold text-[#003e6d] tracking-tight mb-2">Iniciar Sesión</h1>
+          <p class="text-slate-500 text-sm">Gestioná tus turnos y salud de forma simple.</p>
+        </div>
+        
+        <form [formGroup]="loginForm" (ngSubmit)="iniciarSesion()" class="space-y-4">
+          <div class="space-y-1.5">
+            <label class="block text-xs font-semibold text-slate-700" for="cuil">CUIL</label>
+            <div class="relative rounded-md shadow-sm">
+              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              </div>
+              <input formControlName="cuil" class="block w-full rounded-md border border-slate-300 pl-10 pr-3 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:border-[#003e6d] focus:outline-none focus:ring-1 focus:ring-[#003e6d] transition duration-150" id="cuil" inputmode="numeric" placeholder="Ej. 27301234569" type="text">
+            </div>
+          </div>
+          
+          <div class="space-y-1.5">
+            <label class="block text-xs font-semibold text-slate-700" for="password">Contraseña</label>
+            <div class="relative rounded-md shadow-sm">
+              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                <!-- Ícono del candado -->
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              </div>
+              
+              <!-- Input con tipo dinámico -->
+              <input formControlName="password" [type]="mostrarClave ? 'text' : 'password'" class="block w-full rounded-md border border-slate-300 pl-10 pr-10 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:border-[#003e6d] focus:outline-none focus:ring-1 focus:ring-[#003e6d] transition duration-150" id="password" placeholder="Ingresá tu contraseña">
+              
+              <!-- Botón del ojito -->
+              <button (click)="toggleClave()" aria-label="Mostrar u ocultar contraseña" class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none" type="button">
+                <!-- Ojo abierto -->
+                <svg *ngIf="!mostrarClave" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round"></path><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                <!-- Ojo cerrado -->
+                <svg *ngIf="mostrarClave" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.978 9.978 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"></path></svg>
+              </button>
+            </div>
+          </div>
+          
+          <div class="flex items-center justify-between pt-1">
+            <label class="flex items-center space-x-2 text-xs text-slate-600 cursor-pointer select-none">
+              <input class="h-4 w-4 rounded border-slate-300 text-[#003e6d] focus:ring-[#003e6d]/30" type="checkbox">
+              <span>Recordarme</span>
+            </label>
+            <a (click)="recuperarClave($event)" class="text-xs font-semibold text-[#003e6d] hover:text-sky-700 hover:underline transition-colors cursor-pointer">¿Olvidé mi contraseña?</a>
+          </div>
+          
+          <div class="pt-2">
+            <button class="w-full inline-flex justify-center items-center py-2.5 px-4 rounded-md shadow-sm text-sm font-semibold text-white bg-[#003e6d] hover:bg-[#002f54] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#003e6d] transition duration-150 gap-2 cursor-pointer" type="submit">
+              <span>Iniciar Sesión</span>
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+            </button>
+          </div>
+        </form>
+        
+        <div class="mt-8 pt-5 border-t border-slate-100 text-center">
+          <p class="text-xs text-slate-600 leading-relaxed">¿Es tu primera vez en el portal?
+            <a routerLink="/registro" class="font-semibold text-[#003e6d] hover:text-sky-700 hover:underline ml-1 cursor-pointer">Registrarse como paciente</a>
+          </p>
+        </div>
+      </div>
+    </div>
+    <!-- Botón extra para volver al portal fácilmente -->
+    <div class="mt-6 text-center">
+      <a routerLink="/" class="text-sm font-medium text-slate-500 hover:text-[#0a2540] transition-colors">← Volver al Portal de Selección</a>
+    </div>
+  </section>
+</main>

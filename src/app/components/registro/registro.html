@@ -1,0 +1,161 @@
+<div class="bg-gray-100 min-h-screen flex items-center justify-center p-3 md:p-6 font-sans antialiased text-gray-800">
+  <main class="w-full max-w-2xl bg-white rounded-lg shadow-xl overflow-hidden border border-gray-100 flex flex-col my-4">
+    <section class="flex-1 bg-white p-6 md:p-8">
+      <form [formGroup]="registroForm" (ngSubmit)="registrar()" class="space-y-6">
+        
+        <!-- Datos Personales -->
+        <fieldset class="space-y-3.5">
+          <legend class="w-full flex items-center gap-2 pb-2 border-b border-gray-200 text-sm font-semibold text-gray-900">
+            <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+            <span>Datos Personales</span>
+          </legend>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1" for="nombre">Nombre</label>
+              <input formControlName="nombre" class="w-full h-9 rounded-md border-gray-300 text-sm px-3 shadow-none focus:ring-1 focus:ring-sky-600 focus:border-sky-600" id="nombre" type="text" placeholder="Ej. Juan">
+            </div>
+          <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1" for="apellido">Apellido</label>
+              <input formControlName="apellido" class="w-full h-9 rounded-md border-gray-300 text-sm px-3 shadow-none focus:ring-1 focus:ring-sky-600 focus:border-sky-600" id="apellido" type="text" placeholder="Ej. Pérez">
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1" for="cuil">CUIL (Documento)</label>
+            <input formControlName="cuil" class="w-full h-9 rounded-md border-gray-300 text-sm px-3 focus:ring-1 focus:ring-sky-600 focus:border-sky-600" id="cuil" name="cuil" placeholder="Sin guiones ni espacios" type="text">
+          </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1" for="dob">Fecha de Nacimiento</label>
+              <input formControlName="dob" class="w-full h-9 rounded-md border-gray-300 text-sm px-3 text-gray-500 focus:ring-1 focus:ring-sky-600 focus:border-sky-600" id="dob" name="dob" type="date">
+            </div>
+          </div>
+          
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1" for="gender">Género</label>
+            <select formControlName="gender" class="w-full h-9 rounded-md border-gray-300 text-sm px-3 text-gray-700 bg-white focus:ring-1 focus:ring-sky-600 focus:border-sky-600" id="gender" name="gender">
+              <option disabled="" value="">Seleccione</option>
+              <option value="femenino">Femenino</option>
+              <option value="masculino">Masculino</option>
+              <option value="no-binario">No binario</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
+          
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1" for="email">Correo Electrónico</label>
+            <input formControlName="email" class="w-full h-9 rounded-md border-gray-300 text-sm px-3 focus:ring-1 focus:ring-sky-600 focus:border-sky-600" id="email" name="email" placeholder="correo@ejemplo.com" type="email">
+          </div>
+          
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1" for="address">Dirección</label>
+            <input class="w-full h-9 rounded-md border-gray-300 text-sm px-3 focus:ring-1 focus:ring-sky-600 focus:border-sky-600" id="address" name="address" placeholder="Calle, Número, Localidad" type="text">
+          </div>
+          
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1" for="phone">Número de Teléfono</label>
+            <input class="w-full h-9 rounded-md border-gray-300 text-sm px-3 focus:ring-1 focus:ring-sky-600 focus:border-sky-600" id="phone" name="phone" placeholder="Código de área + Número" type="tel">
+          </div>
+        </fieldset>
+        
+        <!-- Seguridad -->
+        <fieldset class="space-y-3.5">
+          <legend class="w-full flex items-center gap-2 pb-2 border-b border-gray-200 text-sm font-semibold text-gray-900">
+            <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+            <span>Seguridad</span>
+          </legend>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            
+            <!-- 1. Contraseña Principal -->
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1" for="password">Contraseña</label>
+              <div class="relative">
+                <input formControlName="password" [type]="mostrarClave ? 'text' : 'password'" class="w-full h-9 rounded-md border-gray-300 text-sm px-3 pr-10 tracking-widest placeholder:tracking-widest focus:ring-1 focus:ring-sky-600 focus:border-sky-600" id="password" placeholder="••••••••">
+                <button type="button" aria-label="Mostrar u ocultar contraseña" (click)="toggleClave()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700">
+                  <svg *ngIf="!mostrarClave" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                  <svg *ngIf="mostrarClave" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.978 9.978 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"></path></svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- 2. Confirmar Contraseña -->
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1" for="confirm_password">Confirmar Contraseña</label>
+              <div class="relative">
+                <input formControlName="confirm_password" [type]="mostrarConfirmarClave ? 'text' : 'password'" class="w-full h-9 rounded-md border-gray-300 text-sm px-3 pr-10 tracking-widest placeholder:tracking-widest focus:ring-1 focus:ring-sky-600 focus:border-sky-600" id="confirm_password" placeholder="••••••••">
+                <button type="button" aria-label="Mostrar u ocultar contraseña" (click)="toggleConfirmarClave()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700">
+                  <svg *ngIf="!mostrarConfirmarClave" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                  <svg *ngIf="mostrarConfirmarClave" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.978 9.978 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"></path></svg>
+                </button>
+              </div>
+  
+              <!-- Alerta dinámica si las contraseñas no coinciden -->
+              <p *ngIf="registroForm.hasError('passwordsMismatch') && registroForm.get('confirm_password')?.dirty" class="text-red-500 text-[10px] mt-1">
+                Las contraseñas no coinciden.
+              </p>
+            </div>
+
+          </div>
+        </fieldset>
+        <!-- Cobertura Médica -->
+        <fieldset class="space-y-3.5">
+          <legend class="w-full flex items-center gap-2 pb-2 border-b border-gray-200 text-sm font-semibold text-gray-900">
+            <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+            <span>Cobertura Médica</span>
+          </legend>
+          
+          <div class="bg-[#eff5ff] border border-blue-100 rounded-md p-3.5 space-y-2">
+            <span class="block text-xs font-medium text-gray-800">¿Posee Obra Social o Prepaga?</span>
+            <div class="flex items-center gap-6 text-xs text-gray-700 font-medium">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input formControlName="has_insurance" class="w-4 h-4 text-[#00589c] focus:ring-[#00589c] border-gray-300" type="radio" value="si">
+                <span>Sí</span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input formControlName="has_insurance" class="w-4 h-4 text-[#00589c] focus:ring-[#00589c] border-gray-300" type="radio" value="no">
+                <span class="text-gray-600 font-normal">No (Particular)</span>
+              </label>
+            </div>
+          </div>
+          
+          <!-- Este contenedor envuelve y oculta dinámicamente los datos -->
+          <div *ngIf="registroForm.get('has_insurance')?.value === 'si'" class="space-y-3.5 mt-3.5">
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1" for="provider">Obra Social / Prepaga</label>
+              <select formControlName="provider" class="w-full h-9 rounded-md border-gray-300 text-sm px-3 text-gray-600 bg-white focus:ring-1 focus:ring-sky-600 focus:border-sky-600" id="provider">
+                <option value="">Seleccione prestador</option>
+                <option value="osep">OSEP</option>
+                <option value="pami">PAMI</option>
+                <option value="otra">Otra</option>
+              </select>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1" for="affiliate_num"> N° Afiliado</label>
+                <input formControlName="affiliate_num" class="w-full h-9 rounded-md border-gray-300 text-sm px-3 focus:ring-1 focus:ring-sky-600 focus:border-sky-600" id="affiliate_num" type="text">
+              </div>
+              <div>
+                <div class="flex justify-between items-center mb-1">
+                  <label class="block text-xs font-medium text-gray-700" for="plan">Plan</label>
+                  <span class="text-[11px] text-gray-400 font-normal">(Opcional)</span>
+                </div>
+                <input formControlName="plan" class="w-full h-9 rounded-md border-gray-300 text-sm px-3 focus:ring-1 focus:ring-sky-600 focus:border-sky-600" id="plan" placeholder="Ej. 210, Premium" type="text">
+              </div>
+            </div>
+          </div>
+        </fieldset>
+        
+        <!-- Botones de Acción -->
+        <div class="pt-5 border-t border-gray-100 flex items-center justify-between">
+          <a routerLink="/login-paciente" class="text-xs font-medium text-gray-700 hover:text-gray-900 transition-colors">← Volver al inicio</a>
+          <button class="inline-flex items-center gap-2 bg-[#00589c] hover:bg-[#004880] text-white px-5 py-2.5 rounded-md text-xs font-semibold shadow-sm transition duration-150" type="submit">
+            <span>Registrarse</span>
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          </button>
+        </div>
+      </form>
+    </section>
+  </main>
+</div>
