@@ -1,0 +1,499 @@
+<div class="space-y-6">
+
+  <!-- ========================================================================= -->
+  <!-- SUB-BARRA OPERATIVA (Ventanilla 3 - Mostrador / Trámite Presencial) -->
+  <!-- ========================================================================= -->
+  <div class="bg-gradient-to-r from-sky-900 to-[#0e3a6c] px-6 py-2.5 text-white flex flex-wrap items-center justify-between gap-3 shadow-inner">
+    <div class="flex items-center space-x-3">
+      <div class="w-8 h-8 rounded-lg bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-sky-300">
+        <span class="material-symbols-outlined text-xl">desk</span>
+      </div>
+      <div>
+        <div class="flex items-center space-x-2">
+          <h2 class="text-sm font-bold tracking-tight text-white">{{ ventanillaNombre }}</h2>
+          <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider" [ngClass]="estadoVentanilla === 'ATENDIENDO' ? 'bg-emerald-500 text-white' : 'bg-amber-400 text-slate-900'">
+            {{ estadoVentanilla === 'ATENDIENDO' ? 'En Servicio' : 'Pausa' }}
+          </span>
+        </div>
+        <p class="text-[11px] text-sky-200">Operador: {{ operadorNombre }} ({{ operadorLegajo }})</p>
+      </div>
+    </div>
+
+    <div class="flex items-center space-x-4">
+      <div class="hidden md:flex items-center space-x-4 text-xs text-sky-200 pr-2 border-r border-sky-700/60">
+        <div>Admisiones Hoy: <strong class="text-white font-bold">{{ admisionesHoy }}</strong></div>
+        <div>Promedio: <strong class="text-white font-bold">{{ tiempoPromedio }}</strong></div>
+      </div>
+
+      <div class="flex items-center space-x-2">
+        <button (click)="cambiarPaciente()" class="px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold transition-colors flex items-center space-x-1 shadow-xs cursor-pointer">
+          <span class="material-symbols-outlined text-sm">refresh</span>
+          <span>Reiniciar Flujo</span>
+        </button>
+        <button (click)="llamarSiguienteTicket()" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-colors flex items-center space-x-1 shadow-xs cursor-pointer">
+          <span class="material-symbols-outlined text-sm">campaign</span>
+          <span>Llamar Tótem</span>
+        </button>
+        <button (click)="pausarVentanilla()" class="px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-colors" [title]="estadoVentanilla === 'ATENDIENDO' ? 'Pausar ventanilla' : 'Reanudar atención'">
+          <span class="material-symbols-outlined text-sm">{{ estadoVentanilla === 'ATENDIENDO' ? 'pause' : 'play_arrow' }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- CUERPO PRINCIPAL DIVIDIDO EN 2 COLUMNAS (Flujo de Cita + Columna Derecha) -->
+  <!-- ========================================================================= -->
+  <div class="p-6 max-w-[1600px] w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- COLUMNA IZQUIERDA / CENTRAL (8 Cols): PASO 1, 2 Y 3 -->
+    <div class="lg:col-span-8 space-y-6">
+
+      <!-- Alerta de Éxito de Emisión -->
+      <div *ngIf="mensajeExitoTurno" class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 flex items-center justify-between shadow-xs">
+        <div class="flex items-center space-x-3">
+          <span class="material-symbols-outlined text-emerald-600 text-2xl">verified</span>
+          <div>
+            <h4 class="font-bold text-sm">Turno Presencial Confirmado</h4>
+            <p class="text-xs text-emerald-700">{{ mensajeExitoTurno }}</p>
+          </div>
+        </div>
+        <button (click)="cambiarPaciente()" class="px-3 py-1 rounded-lg bg-emerald-700 text-white text-xs font-bold hover:bg-emerald-800">
+          Nueva Admisión
+        </button>
+      </div>
+
+      <!-- ===================================================================== -->
+      <!-- PASO 1: BÚSQUEDA Y VALIDACIÓN EN PADRÓN (DNI) -->
+      <!-- ===================================================================== -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+        <div class="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs" [ngClass]="pacienteSeleccionado ? 'bg-emerald-600 text-white' : 'bg-sky-700 text-white'">
+              <span *ngIf="pacienteSeleccionado" class="material-symbols-outlined text-sm">check</span>
+              <span *ngIf="!pacienteSeleccionado">1</span>
+            </div>
+            <h3 class="font-bold text-slate-800 text-sm">Paso 1: Validación de Paciente en Padrón Único</h3>
+          </div>
+          <span *ngIf="pacienteSeleccionado" class="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 flex items-center space-x-1">
+            <span class="material-symbols-outlined text-xs">verified</span>
+            <span>Acreditado RENAPER / SISA</span>
+          </span>
+        </div>
+
+        <div class="p-5">
+          <!-- Input de DNI conectado a botón "Validar en Padrón" -->
+          <div class="flex flex-col sm:flex-row gap-2.5">
+            <div class="relative flex-1">
+              <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <span class="material-symbols-outlined text-xl">badge</span>
+              </span>
+              <input 
+                type="text" 
+                [(ngModel)]="dniBusqueda" 
+                (keyup.enter)="validarEnPadron()"
+                placeholder="Ingrese número de DNI del paciente (ej. 35111222)..." 
+                class="w-full h-11 pl-10 pr-4 rounded-lg border border-slate-300 bg-white text-sm text-slate-800 focus:ring-2 focus:ring-sky-600 focus:outline-none"
+              />
+            </div>
+            <button 
+              (click)="validarEnPadron()" 
+              [disabled]="buscando" 
+              class="h-11 px-6 rounded-lg bg-sky-700 hover:bg-sky-800 text-white font-bold text-xs uppercase tracking-wider transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer shadow-xs">
+              <span *ngIf="buscando" class="material-symbols-outlined text-base animate-spin">progress_activity</span>
+              <span *ngIf="!buscando" class="material-symbols-outlined text-base">manage_search</span>
+              <span>{{ buscando ? 'Validando...' : 'Validar en Padrón' }}</span>
+            </button>
+          </div>
+
+          <!-- Chips de prueba rápida -->
+          <div class="flex flex-wrap items-center gap-1.5 mt-2.5 text-xs text-slate-500">
+            <span class="font-medium text-slate-400">Pruebas rápidas:</span>
+            <button (click)="validarEnPadron('35111222')" class="px-2 py-0.5 rounded bg-slate-100 hover:bg-sky-100 text-slate-700 font-mono text-[11px] border border-slate-200">
+              DNI 35111222 (Juan)
+            </button>
+            <button (click)="validarEnPadron('40222333')" class="px-2 py-0.5 rounded bg-slate-100 hover:bg-sky-100 text-slate-700 font-mono text-[11px] border border-slate-200">
+              DNI 40222333 (Lucía)
+            </button>
+            <button (click)="validarEnPadron('99999999')" class="px-2 py-0.5 rounded bg-rose-50 hover:bg-rose-100 text-rose-700 font-mono text-[11px] border border-rose-200">
+              DNI 99999999 (No Registrado)
+            </button>
+          </div>
+
+          <!-- ESTADO: PACIENTE ENCONTRADO (Ficha Validada) -->
+          <div *ngIf="pacienteSeleccionado" class="mt-5 border border-slate-200 rounded-xl bg-slate-50/60 p-4 shadow-xs">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
+              <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 rounded-full bg-gradient-to-tr from-sky-700 to-blue-600 text-white font-bold text-base flex items-center justify-center shadow-xs">
+                  {{ pacienteSeleccionado.nombre.charAt(0) }}{{ pacienteSeleccionado.apellido.charAt(0) }}
+                </div>
+                <div>
+                  <h4 class="text-base font-bold text-slate-900 leading-tight">
+                    {{ pacienteSeleccionado.nombre }} {{ pacienteSeleccionado.apellido }}
+                  </h4>
+                  <div class="flex items-center gap-2 text-xs text-slate-500 font-mono mt-0.5">
+                    <span>DNI: <strong class="text-slate-800">{{ pacienteSeleccionado.dni }}</strong></span>
+                    <span>•</span>
+                    <span>Cobertura: <strong class="text-sky-800">{{ pacienteSeleccionado.obraSocialNombre || 'OSEP Mendoza' }}</strong></span>
+                  </div>
+                </div>
+              </div>
+
+              <button (click)="cambiarPaciente()" class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold cursor-pointer">
+                Cambiar Paciente
+              </button>
+            </div>
+
+            <!-- Alertas Clínicas y Sanitarias -->
+            <div class="mt-3 p-3 bg-amber-50 rounded-lg border border-amber-200 text-xs">
+              <span class="font-bold text-amber-900 block mb-1">⚠️ Alertas Clínicas Registradas:</span>
+              <div class="flex flex-wrap gap-1.5">
+                <span *ngFor="let a of pacienteSeleccionado.alertasClinicas" class="px-2 py-0.5 rounded bg-white text-amber-900 border border-amber-300 font-medium text-[11px]">
+                  {{ a }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ESTADO: PACIENTE NO ENCONTRADO -->
+          <div *ngIf="noEmpadronado && !pacienteSeleccionado" class="mt-5 p-4 rounded-xl bg-amber-50 border border-amber-300 text-amber-950 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h5 class="font-bold text-xs text-amber-900">Paciente no empadronado con DNI {{ dniBusqueda }}</h5>
+              <p class="text-[11px] text-amber-800">No se encontraron antecedentes. Debe registrarlo en ventanilla para continuar.</p>
+            </div>
+            <button (click)="abrirModalAlta(dniBusqueda)" class="px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs uppercase tracking-wider shrink-0 cursor-pointer shadow-xs">
+              + Registrar Paciente Presencial
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================================================================== -->
+      <!-- PASO 2: CASCADA DE PRÁCTICA MÉDICA, ESPECIALIDAD Y PROFESIONAL -->
+      <!-- ===================================================================== -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden" [ngClass]="{'opacity-60 pointer-events-none': !pacienteSeleccionado}">
+        <div class="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs bg-sky-700 text-white">
+              2
+            </div>
+            <h3 class="font-bold text-slate-800 text-sm">Paso 2: Práctica Médica y Selección en Cascada</h3>
+          </div>
+        </div>
+
+        <div class="p-5 space-y-5">
+          <!-- Tipo de Práctica -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+              Tipo de Práctica Requerida <span class="text-red-500">*</span>
+            </label>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+              <div 
+                *ngFor="let p of tiposPracticaDisponibles"
+                (click)="seleccionarTipoPractica(p.id)"
+                class="p-3 rounded-xl border-2 cursor-pointer transition-all flex flex-col justify-between"
+                [ngClass]="tipoPractica === p.id ? 'border-sky-700 bg-sky-50/60 shadow-xs' : 'border-slate-200 bg-white hover:bg-slate-50'">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="material-symbols-outlined text-2xl" [ngClass]="tipoPractica === p.id ? 'text-sky-700' : 'text-slate-500'">{{ p.icono }}</span>
+                  <span class="text-[9px] font-bold px-1 py-0.5 rounded uppercase" [ngClass]="tipoPractica === p.id ? 'bg-sky-200 text-sky-900' : 'bg-slate-100 text-slate-600'">{{ p.badge }}</span>
+                </div>
+                <div>
+                  <h6 class="text-xs font-bold text-slate-900 leading-tight">{{ p.nombre }}</h6>
+                  <p class="text-[10px] text-slate-500 mt-0.5">{{ p.desc }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cascada Especialidad -> Profesional -> Sede/Consultorio -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
+            <!-- Especialidad -->
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Especialidad Requerida <span class="text-red-500">*</span></label>
+              <select [(ngModel)]="especialidadId" (change)="onEspecialidadChange()" class="w-full h-10 px-3 rounded-lg border border-slate-300 bg-white text-xs font-medium focus:ring-2 focus:ring-sky-600 focus:outline-none">
+                <option *ngFor="let e of especialidades" [ngValue]="e.id">{{ e.nombre }}</option>
+              </select>
+            </div>
+
+            <!-- Profesional (Dr. Roberto Rossi) -->
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Profesional Asignado <span class="text-red-500">*</span></label>
+              <select [(ngModel)]="profesionalId" class="w-full h-10 px-3 rounded-lg border border-slate-300 bg-white text-xs font-medium focus:ring-2 focus:ring-sky-600 focus:outline-none">
+                <option *ngFor="let prof of profesionalesFiltrados" [ngValue]="prof.id">
+                  Dr/a. {{ prof.nombre }} {{ prof.apellido }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Sede / Consultorio -->
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Consultorio Asignado</label>
+              <div class="h-10 px-3 rounded-lg border border-slate-200 bg-slate-50 text-xs font-medium text-slate-700 flex items-center justify-between">
+                <span>{{ consultorioAsignado }}</span>
+                <span class="material-symbols-outlined text-slate-400 text-base">meeting_room</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================================================================== -->
+      <!-- PASO 3: SLOTS/CUPOS EN TIEMPO REAL Y EMISIÓN PRESENCIAL -->
+      <!-- ===================================================================== -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden" [ngClass]="{'opacity-60 pointer-events-none': !pacienteSeleccionado}">
+        <div class="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs bg-sky-700 text-white">
+              3
+            </div>
+            <h3 class="font-bold text-slate-800 text-sm">Paso 3: Grilla de Cupos y Confirmación de Emisión</h3>
+          </div>
+        </div>
+
+        <div class="p-5 space-y-4">
+          <!-- Grilla de Horarios / Píldoras -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+              Horarios Disponibles para Mañana (09:30, 10:15, etc.) <span class="text-red-500">*</span>
+            </label>
+            <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-2">
+              <button 
+                *ngFor="let s of slotsHorarios"
+                type="button"
+                (click)="slotSeleccionado = s.hora"
+                class="py-2 px-1 rounded-lg border text-center transition-all cursor-pointer flex flex-col items-center justify-center"
+                [ngClass]="slotSeleccionado === s.hora ? 'border-sky-700 bg-sky-50 text-sky-900 ring-2 ring-sky-700 font-bold shadow-xs' : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-medium'">
+                <span class="text-xs">{{ s.hora }} hs</span>
+                <span class="text-[9px] text-slate-400 mt-0.5">{{ s.cupo }}</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Formato y Orden -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Orden de Derivación (Opcional)</label>
+              <input type="text" [(ngModel)]="ordenDerivacion" placeholder="Ej. ORD-2026-98124" class="w-full h-10 px-3 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-sky-600 focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Formato de Emisión</label>
+              <div class="grid grid-cols-3 gap-1.5">
+                <button type="button" (click)="formatoEmision = 'TERMICA'" class="h-10 rounded-lg border text-[11px] font-bold" [ngClass]="formatoEmision === 'TERMICA' ? 'border-sky-700 bg-sky-50 text-sky-900' : 'border-slate-200 bg-white text-slate-600'">
+                  Térmica
+                </button>
+                <button type="button" (click)="formatoEmision = 'WHATSAPP'" class="h-10 rounded-lg border text-[11px] font-bold" [ngClass]="formatoEmision === 'WHATSAPP' ? 'border-sky-700 bg-sky-50 text-sky-900' : 'border-slate-200 bg-white text-slate-600'">
+                  WhatsApp
+                </button>
+                <button type="button" (click)="formatoEmision = 'AMBOS'" class="h-10 rounded-lg border text-[11px] font-bold" [ngClass]="formatoEmision === 'AMBOS' ? 'border-sky-700 bg-sky-50 text-sky-900' : 'border-slate-200 bg-white text-slate-600'">
+                  Ambos
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Botón Confirmar Asignación y Emitir Turno -->
+          <div class="pt-2">
+            <button 
+              (click)="confirmarAsignacion()"
+              [disabled]="guardandoTurno || !pacienteSeleccionado || !slotSeleccionado"
+              class="w-full py-3.5 rounded-xl bg-gradient-to-r from-sky-700 to-blue-800 hover:from-sky-800 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-md flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer">
+              <span *ngIf="guardandoTurno" class="material-symbols-outlined text-base animate-spin">progress_activity</span>
+              <span *ngIf="!guardandoTurno" class="material-symbols-outlined text-base">confirmation_number</span>
+              <span>{{ guardandoTurno ? 'Emitiendo...' : 'Confirmar Asignación y Emitir Turno' }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- COLUMNA DERECHA (4 Cols): TÓTEM, GUARDIA Y ÚLTIMAS ADMISIONES -->
+    <div class="lg:col-span-4 space-y-6">
+
+      <!-- 1. Tótem y Fila Actual -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+        <div class="p-3.5 bg-[#0a1e3b] text-white flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <span class="material-symbols-outlined text-sky-400">desktop_windows</span>
+            <h4 class="font-bold text-xs uppercase tracking-wider">Tótem y Fila Actual</h4>
+          </div>
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        </div>
+
+        <div class="p-5 text-center">
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Llamador Activo</span>
+          <div class="my-3 py-3 px-6 rounded-2xl bg-slate-50 border-2 border-slate-200 font-mono font-black text-5xl text-sky-900" [ngClass]="{'animate-call-ticket': ticketAnimado}">
+            {{ totemTicket.numero }}
+          </div>
+          <p class="text-xs font-semibold text-slate-600">{{ totemTicket.categoria }}</p>
+
+          <button 
+            (click)="llamarSiguienteTicket()"
+            class="w-full mt-4 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider shadow-sm flex items-center justify-center space-x-2 cursor-pointer">
+            <span class="material-symbols-outlined text-base">campaign</span>
+            <span>Llamar siguiente ticket a ventanilla</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 2. Guardia Médica del Día -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+        <div class="p-3.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <span class="material-symbols-outlined text-sky-700">medical_services</span>
+            <h4 class="font-bold text-xs uppercase tracking-wider text-slate-800">Guardia Médica del Día</h4>
+          </div>
+          <span class="text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded font-bold">Activa</span>
+        </div>
+
+        <div class="p-3 space-y-2">
+          <div *ngFor="let g of guardiaMedica" class="p-2.5 rounded-lg border border-slate-100 bg-slate-50/50 text-xs">
+            <div class="font-bold text-slate-900">{{ g.servicio }}</div>
+            <div class="text-[11px] text-slate-500">{{ g.medico }} • {{ g.estado }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Últimas Admisiones con Reimpresión -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+        <div class="p-3.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <span class="material-symbols-outlined text-sky-700">receipt_long</span>
+            <h4 class="font-bold text-xs uppercase tracking-wider text-slate-800">Últimas Admisiones</h4>
+          </div>
+          <span class="text-[10px] font-mono text-slate-500">{{ ultimasAdmisiones.length }} turnos</span>
+        </div>
+
+        <div class="p-3 space-y-2 max-h-[380px] overflow-y-auto custom-scrollbar">
+          <div *ngFor="let adm of ultimasAdmisiones" class="p-2.5 rounded-lg border border-slate-200 bg-slate-50/50 text-xs space-y-1">
+            <div class="flex items-center justify-between font-mono">
+              <span class="font-bold text-sky-800">{{ adm.codigoTurno }}</span>
+              <span class="text-slate-400 text-[10px]">{{ adm.hora }} hs</span>
+            </div>
+            <div class="font-bold text-slate-800">{{ adm.pacienteNombre }}</div>
+            <div class="text-[11px] text-slate-500">{{ adm.especialidad }} ({{ adm.consultorio }})</div>
+            <div class="pt-1 text-right">
+              <button (click)="reimprimir(adm)" class="px-2 py-0.5 rounded bg-sky-50 hover:bg-sky-100 text-sky-800 font-bold border border-sky-200 text-[10px] inline-flex items-center space-x-1 cursor-pointer">
+                <span class="material-symbols-outlined text-xs">print</span>
+                <span>Reimprimir Comprobante</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Modal Alta Rápida de Paciente -->
+  <div *ngIf="modalAltaAbierto" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-lg w-full overflow-hidden">
+      <div class="p-4 bg-sky-900 text-white flex items-center justify-between">
+        <h3 class="font-bold text-sm">Alta Rápida de Paciente Presencial</h3>
+        <button (click)="cerrarModalAlta()" class="text-slate-300 hover:text-white cursor-pointer">
+          <span class="material-symbols-outlined text-xl">close</span>
+        </button>
+      </div>
+      <div class="p-5 space-y-3 text-xs">
+        <div *ngIf="errorAltaModal" class="p-2 bg-rose-50 text-rose-800 rounded font-semibold">{{ errorAltaModal }}</div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold mb-1">DNI *</label>
+            <input type="text" [(ngModel)]="nuevoPaciente.dni" class="w-full h-9 px-2 rounded border border-slate-300" />
+          </div>
+          <div>
+            <label class="block font-bold mb-1">Sexo *</label>
+            <select [(ngModel)]="nuevoPaciente.sexo" class="w-full h-9 px-2 rounded border border-slate-300">
+              <option value="Femenino">Femenino</option>
+              <option value="Masculino">Masculino</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold mb-1">Nombre *</label>
+            <input type="text" [(ngModel)]="nuevoPaciente.nombre" class="w-full h-9 px-2 rounded border border-slate-300" />
+          </div>
+          <div>
+            <label class="block font-bold mb-1">Apellido *</label>
+            <input type="text" [(ngModel)]="nuevoPaciente.apellido" class="w-full h-9 px-2 rounded border border-slate-300" />
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold mb-1">Fecha Nacimiento *</label>
+            <input type="date" [(ngModel)]="nuevoPaciente.fechaNacimiento" class="w-full h-9 px-2 rounded border border-slate-300" />
+          </div>
+          <div>
+            <label class="block font-bold mb-1">Teléfono *</label>
+            <input type="text" [(ngModel)]="nuevoPaciente.telefono" class="w-full h-9 px-2 rounded border border-slate-300" />
+          </div>
+        </div>
+        <div>
+          <label class="block font-bold mb-1">Obra Social *</label>
+          <select [(ngModel)]="nuevoPaciente.obraSocialId" class="w-full h-9 px-2 rounded border border-slate-300">
+            <option *ngFor="let os of obrasSocialesLista" [value]="os.id">{{ os.nombre }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="p-3 bg-slate-50 border-t border-slate-200 flex justify-end space-x-2">
+        <button (click)="cerrarModalAlta()" class="px-3 py-1.5 rounded border border-slate-300 text-xs font-bold">Cancelar</button>
+        <button (click)="guardarNuevoPaciente()" [disabled]="guardandoAlta" class="px-4 py-1.5 rounded bg-sky-700 text-white text-xs font-bold shadow-xs">
+          {{ guardandoAlta ? 'Guardando...' : 'Guardar y Asignar Turno' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Comprobante Térmico (80mm) -->
+  <div *ngIf="modalTicketAbierto && ticketActivo" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-xs">
+    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-sm w-full overflow-hidden">
+      <div class="p-3 bg-slate-800 text-white flex items-center justify-between text-xs">
+        <span class="font-bold flex items-center space-x-1">
+          <span class="material-symbols-outlined text-base text-sky-400">print</span>
+          <span>Comprobante Térmico Oficial (80mm)</span>
+        </span>
+        <button (click)="cerrarModalTicket()" class="text-slate-300 hover:text-white cursor-pointer">
+          <span class="material-symbols-outlined text-xl">close</span>
+        </button>
+      </div>
+
+      <div id="thermal-ticket-print" class="p-6 bg-white text-slate-900 font-mono text-xs space-y-3 border-b border-dashed border-slate-300 select-all">
+        <div class="text-center pb-2 border-b border-slate-300">
+          <p class="font-bold uppercase text-[11px] text-slate-700">Gobierno de Mendoza</p>
+          <h4 class="font-black text-sm uppercase text-slate-900">Hospital Central</h4>
+          <p class="text-[10px] text-slate-500 font-bold mt-1">COMPROBANTE DE TURNO PRESENCIAL</p>
+        </div>
+        <div class="text-center py-1 bg-slate-100 rounded">
+          <span class="text-base font-black text-slate-900">{{ ticketActivo.codigoTurno }}</span>
+        </div>
+        <div class="space-y-1 text-[11px] border-b border-slate-200 pb-2">
+          <div><strong>PACIENTE:</strong> {{ ticketActivo.pacienteNombre }}</div>
+          <div><strong>DNI:</strong> {{ ticketActivo.pacienteDni }}</div>
+          <div><strong>COBERTURA:</strong> {{ ticketActivo.cobertura }}</div>
+        </div>
+        <div class="space-y-1 text-[11px] border-b border-slate-200 pb-2">
+          <div><strong>ESPECIALIDAD:</strong> {{ ticketActivo.especialidad }}</div>
+          <div><strong>PROFESIONAL:</strong> {{ ticketActivo.profesional }}</div>
+          <div><strong>LUGAR:</strong> {{ ticketActivo.consultorio }}</div>
+          <div class="pt-1 font-bold text-sky-900 text-center">FECHA Y HORA: {{ ticketActivo.fechaHoraTurno }}</div>
+        </div>
+        <div class="text-[10px] text-slate-500 text-center">
+          Ventanilla 3 • Operador: {{ ticketActivo.operadorNombre }}
+        </div>
+      </div>
+
+      <div class="p-4 bg-slate-50 flex items-center justify-between gap-2">
+        <button (click)="cerrarModalTicket()" class="px-3 py-2 rounded-lg border border-slate-300 text-slate-700 text-xs font-bold hover:bg-slate-100">
+          Cerrar
+        </button>
+        <button (click)="imprimirTicket()" class="flex-1 py-2 rounded-lg bg-sky-700 hover:bg-sky-800 text-white text-xs font-bold flex items-center justify-center space-x-1.5 shadow-sm">
+          <span class="material-symbols-outlined text-base">print</span>
+          <span>Imprimir Ticket Térmico</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>

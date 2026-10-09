@@ -1,0 +1,269 @@
+<div class="p-6 max-w-[1600px] w-full mx-auto space-y-6">
+
+  <!-- ========================================================================= -->
+  <!-- 1. HEADER AUDITORÍA DE DOCUMENTACIÓN Y PADRÓN -->
+  <!-- ========================================================================= -->
+  <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div class="space-y-1">
+      <div class="flex items-center space-x-2">
+        <span class="material-symbols-outlined text-sky-700 text-2xl">verified_user</span>
+        <h2 class="text-xl font-black text-slate-900 tracking-tight">Auditoría de Documentación y Padrón de Pacientes</h2>
+      </div>
+      <p class="text-xs text-slate-500">
+        Control de Identidad RENAPER • Acreditación de Cobertura OSEP Mendoza • Validación de Vínculos Familiares
+      </p>
+    </div>
+
+    <div class="flex items-center space-x-3">
+      <button 
+        (click)="abrirAltaManual()"
+        class="px-4 py-2.5 rounded-xl bg-sky-700 hover:bg-sky-800 text-white font-bold text-xs uppercase tracking-wider transition-colors flex items-center space-x-2 shadow-xs cursor-pointer">
+        <span class="material-symbols-outlined text-lg">person_add_disabled</span>
+        <span>+ Alta Manual Excepcional</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mensaje de éxito si se aprueba o rechaza -->
+  <div *ngIf="mensajeExito" class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 flex items-center space-x-2 text-xs font-bold">
+    <span class="material-symbols-outlined text-emerald-600">check_circle</span>
+    <span>{{ mensajeExito }}</span>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 2. MÉTRICAS DEL PADRÓN -->
+  <!-- ========================================================================= -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div *ngFor="let m of metricas" class="p-4 bg-white rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
+      <div>
+        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ m.label }}</span>
+        <div class="text-2xl font-black text-slate-900 mt-1 tracking-tight">{{ m.valor }}</div>
+      </div>
+      <div class="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" [ngClass]="[m.bg, m.color]">
+        <span class="material-symbols-outlined text-2xl">{{ m.icono }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 3. BANDEJA DE SOLICITUDES CON VISOR DOCUMENTAL -->
+  <!-- ========================================================================= -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- Lista de Solicitudes (5 Cols) -->
+    <div class="lg:col-span-5 bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden flex flex-col">
+      <div class="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <span class="material-symbols-outlined text-amber-600">pending_actions</span>
+          <h4 class="font-bold text-xs uppercase tracking-wider text-slate-800">Solicitudes de Empadronamiento</h4>
+        </div>
+        <span class="text-xs font-mono font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+          {{ solicitudes.length }} Pendientes
+        </span>
+      </div>
+
+      <div class="divide-y divide-slate-100 overflow-y-auto max-h-[560px] custom-scrollbar flex-1">
+        <div 
+          *ngFor="let s of solicitudes"
+          (click)="seleccionarSolicitud(s)"
+          class="p-4 transition-all cursor-pointer flex flex-col space-y-1.5"
+          [ngClass]="solicitudSeleccionada.id === s.id ? 'bg-sky-50/70 border-l-4 border-l-sky-700' : 'hover:bg-slate-50'">
+          
+          <div class="flex items-center justify-between">
+            <h5 class="font-bold text-sm text-slate-900">{{ s.paciente }}</h5>
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase" [ngClass]="s.estado === 'Aprobado' ? 'bg-emerald-100 text-emerald-800' : (s.estado === 'Rechazado' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800')">
+              {{ s.estado }}
+            </span>
+          </div>
+
+          <div class="text-xs text-slate-600 font-mono">DNI: {{ s.dni }}</div>
+          <div class="text-xs text-slate-700 font-medium">{{ s.tipoTramite }}</div>
+
+          <div class="flex items-center justify-between pt-1 text-[11px] text-slate-400">
+            <span>{{ s.cobertura }}</span>
+            <span>{{ s.fechaIngreso }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Visor Documental Interactivo (7 Cols) -->
+    <div class="lg:col-span-7 bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden flex flex-col">
+      <div class="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <span class="material-symbols-outlined text-sky-700">document_scanner</span>
+          <h4 class="font-bold text-xs uppercase tracking-wider text-slate-800">Visor de Legajo Digital</h4>
+        </div>
+        <span class="text-xs font-mono text-slate-500">{{ solicitudSeleccionada.documentos.length }} Adjuntos</span>
+      </div>
+
+      <div class="p-5 space-y-5 flex-1 flex flex-col">
+        
+        <!-- Pestañas de Documentos Adjuntos -->
+        <div class="flex flex-wrap gap-2 border-b border-slate-200 pb-3">
+          <button 
+            *ngFor="let doc of solicitudSeleccionada.documentos; let idx = index"
+            type="button"
+            (click)="docActivoIndex = idx"
+            class="px-3 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center space-x-1.5 cursor-pointer"
+            [ngClass]="docActivoIndex === idx ? 'bg-sky-700 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'">
+            <span class="material-symbols-outlined text-sm">attachment</span>
+            <span>{{ doc.nombre }}</span>
+          </button>
+        </div>
+
+        <!-- Render Simulado de Documento Oficial -->
+        <div class="flex-1 min-h-[220px] rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-6 flex flex-col items-center justify-center text-center space-y-2">
+          <div class="w-16 h-16 rounded-2xl bg-white shadow-sm border border-slate-200 flex items-center justify-center text-sky-700">
+            <span class="material-symbols-outlined text-4xl">picture_as_pdf</span>
+          </div>
+          <div>
+            <h5 class="text-sm font-bold text-slate-900">{{ solicitudSeleccionada.documentos[docActivoIndex].nombre }}</h5>
+            <p class="text-xs text-slate-500 font-mono">Formato: {{ solicitudSeleccionada.documentos[docActivoIndex].tipo }} • Sello Digital Verificado</p>
+          </div>
+          <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+            ✓ Firma Digital Registro Civil Mendoza
+          </span>
+        </div>
+
+        <!-- Checklist de Validación -->
+        <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
+          <span class="font-bold text-slate-700 uppercase tracking-wider text-[11px] block">Criterios de Verificación Obligatorios:</span>
+          
+          <label class="flex items-center space-x-2 text-slate-800 cursor-pointer">
+            <input type="checkbox" [(ngModel)]="checkRenaper" class="w-4 h-4 rounded text-sky-700" />
+            <span>Identidad contrastada positivamente con RENAPER Online</span>
+          </label>
+          <label class="flex items-center space-x-2 text-slate-800 cursor-pointer">
+            <input type="checkbox" [(ngModel)]="checkVinculo" class="w-4 h-4 rounded text-sky-700" />
+            <span>Vínculo filial o tutela acreditada por partida oficial</span>
+          </label>
+          <label class="flex items-center space-x-2 text-slate-800 cursor-pointer">
+            <input type="checkbox" [(ngModel)]="checkCobertura" class="w-4 h-4 rounded text-sky-700" />
+            <span>Validación de carnet y vigencia de cobertura en OSEP Mendoza</span>
+          </label>
+        </div>
+
+        <!-- Acciones del Auditor -->
+        <div class="flex flex-wrap items-center justify-end gap-3 pt-2">
+          <button 
+            type="button"
+            (click)="rechazarTramite()"
+            class="px-4 py-2 rounded-lg border border-rose-300 bg-white text-rose-700 hover:bg-rose-50 font-bold text-xs transition-colors cursor-pointer">
+            Rechazar / Subsanar
+          </button>
+          <button 
+            type="button"
+            (click)="aprobarTramite()"
+            [disabled]="!checkRenaper || !checkVinculo || !checkCobertura"
+            class="px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-sm flex items-center space-x-1.5 cursor-pointer disabled:opacity-50">
+            <span class="material-symbols-outlined text-base">verified</span>
+            <span>Aprobar y Empadronar</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 4. BANDEJA DE AUTORIZACIÓN DE ÓRDENES Y ESTUDIOS DERIVADOS -->
+  <!-- ========================================================================= -->
+  <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+    <div class="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <span class="material-symbols-outlined text-sky-700">order_approve</span>
+        <h4 class="font-bold text-xs uppercase tracking-wider text-slate-800">
+          Bandeja de Autorización de Órdenes y Estudios Derivados
+        </h4>
+      </div>
+      <span class="text-xs font-mono font-bold text-slate-500">{{ ordenes.length }} estudios en trámite</span>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs">
+        <thead class="bg-slate-50/70 text-slate-500 font-bold uppercase text-[10px] border-b border-slate-200">
+          <tr>
+            <th class="p-3">Paciente / DNI</th>
+            <th class="p-3">Estudio / Práctica</th>
+            <th class="p-3">Médico Solicitante</th>
+            <th class="p-3">Diagnóstico</th>
+            <th class="p-3">Fecha</th>
+            <th class="p-3">Estado</th>
+            <th class="p-3 text-right">Acción</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          <tr *ngFor="let o of ordenes" class="hover:bg-slate-50/80 transition-colors">
+            <td class="p-3">
+              <div class="font-bold text-slate-900">{{ o.paciente }}</div>
+              <div class="text-[10px] text-slate-500 font-mono">DNI {{ o.dni }}</div>
+            </td>
+            <td class="p-3 font-semibold text-sky-900">{{ o.estudio }}</td>
+            <td class="p-3 text-slate-600">
+              <div>{{ o.profesionalSolicitante }}</div>
+              <div class="text-[10px] text-slate-400">{{ o.especialidad }}</div>
+            </td>
+            <td class="p-3 text-slate-600">{{ o.diagnostico }}</td>
+            <td class="p-3 font-mono text-slate-500">{{ o.fecha }}</td>
+            <td class="p-3">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase" [ngClass]="o.estado === 'Aprobada' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'">
+                {{ o.estado }}
+              </span>
+            </td>
+            <td class="p-3 text-right">
+              <button 
+                *ngIf="o.estado !== 'Aprobada'"
+                (click)="aprobarOrden(o)"
+                class="px-3 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold border border-emerald-200 text-xs inline-flex items-center space-x-1 cursor-pointer">
+                <span>Autorizar</span>
+              </button>
+              <span *ngIf="o.estado === 'Aprobada'" class="text-emerald-700 font-bold text-xs flex items-center justify-end space-x-1">
+                <span class="material-symbols-outlined text-sm">check</span>
+                <span>Autorizada</span>
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal Alta Manual Excepcional -->
+  <div *ngIf="modalAltaExcepcional" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-md w-full overflow-hidden">
+      <div class="p-4 bg-sky-900 text-white flex items-center justify-between">
+        <h4 class="font-bold text-sm">Alta Manual Excepcional en Padrón</h4>
+        <button (click)="cerrarAltaManual()" class="text-slate-300 hover:text-white cursor-pointer">
+          <span class="material-symbols-outlined text-xl">close</span>
+        </button>
+      </div>
+
+      <div class="p-5 space-y-3 text-xs">
+        <div>
+          <label class="block font-bold mb-1">DNI / Identificador de Emergencia *</label>
+          <input type="text" [(ngModel)]="altaManualDni" placeholder="Ej. 60111222" class="w-full h-9 px-3 rounded border border-slate-300" />
+        </div>
+        <div>
+          <label class="block font-bold mb-1">Nombre Completo *</label>
+          <input type="text" [(ngModel)]="altaManualNombre" placeholder="Ej. Paciente En Tránsito" class="w-full h-9 px-3 rounded border border-slate-300" />
+        </div>
+        <div>
+          <label class="block font-bold mb-1">Motivo de la Excepción *</label>
+          <select [(ngModel)]="altaManualMotivo" class="w-full h-9 px-2 rounded border border-slate-300">
+            <option value="Indocumentado en trámite RENAPER">Indocumentado en trámite RENAPER</option>
+            <option value="Urgencia sin DNI físico">Urgencia sin DNI físico</option>
+            <option value="Extranjero sin DNI">Extranjero sin DNI</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="p-3 bg-slate-50 border-t border-slate-200 flex justify-end space-x-2">
+        <button (click)="cerrarAltaManual()" class="px-3 py-1.5 rounded border border-slate-300 text-xs font-bold">Cancelar</button>
+        <button (click)="guardarAltaManual()" class="px-4 py-1.5 rounded bg-sky-700 text-white text-xs font-bold shadow-xs">Empadronar</button>
+      </div>
+    </div>
+  </div>
+
+</div>
