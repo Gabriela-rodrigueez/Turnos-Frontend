@@ -1,4 +1,6 @@
 import { Injectable, signal, computed } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
 
 export interface UserSession {
   usuarioId?: number;
@@ -16,6 +18,7 @@ export interface UserSession {
 })
 export class AuthService {
   private readonly TOKEN_KEY = 'auth_token';
+  private apiUrl = 'http://localhost:8080/api/v1/auth';
 
   // Signal reactivo para el token actual
   private tokenSignal = signal<string | null>(this.getInitialToken());
@@ -37,35 +40,53 @@ export class AuthService {
     return this.currentUser()?.rol || null;
   });
 
-  constructor() {
+  constructor(private http: HttpClient) {
     // Si no hay token guardado al iniciar, configuramos por defecto la sesión de Operador Administrativo
     // para habilitar el uso inmediato del Panel Administrativo de Mendoza.
-    if (!localStorage.getItem(this.TOKEN_KEY)) {
+    if (!localStorage.getItem(this.TOKEN_KEY) && !localStorage.getItem('token')) {
       this.loginAsAdmin();
     }
   }
 
   private getInitialToken(): string | null {
     if (typeof window === 'undefined' || !window.localStorage) return null;
-    return localStorage.getItem(this.TOKEN_KEY);
+    return localStorage.getItem(this.TOKEN_KEY) || localStorage.getItem('token');
   }
 
   getToken(): string | null {
     return this.tokenSignal();
   }
 
+  obtenerToken(): string | null {
+    return this.getToken();
+  }
+
   setToken(token: string): void {
     if (typeof window !== 'undefined' && window.localStorage) {
       localStorage.setItem(this.TOKEN_KEY, token);
+      localStorage.setItem('token', token);
     }
     this.tokenSignal.set(token);
+  }
+
+  guardarToken(token: string): void {
+    this.setToken(token);
   }
 
   logout(): void {
     if (typeof window !== 'undefined' && window.localStorage) {
       localStorage.removeItem(this.TOKEN_KEY);
+      localStorage.removeItem('token');
     }
     this.tokenSignal.set(null);
+  }
+
+  registrarPaciente(datosRegistro: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/registro`, datosRegistro);
+  }
+
+  login(datosLogin: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/login`, datosLogin);
   }
 
   getPacienteId(): number | null {
@@ -202,3 +223,4 @@ export class AuthService {
     this.setToken(token);
   }
 }
+

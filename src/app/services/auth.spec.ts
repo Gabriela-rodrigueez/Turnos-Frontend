@@ -1,5 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { AuthService } from './auth';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { describe, it, expect, beforeEach } from 'vitest';
 
 describe('AuthService', () => {
@@ -8,7 +10,11 @@ describe('AuthService', () => {
   beforeEach(() => {
     localStorage.clear();
     TestBed.configureTestingModule({
-      providers: [AuthService]
+      providers: [
+        AuthService,
+        provideHttpClient(),
+        provideHttpClientTesting()
+      ]
     });
     service = TestBed.inject(AuthService);
   });
@@ -41,3 +47,4 @@ describe('AuthService', () => {
     expect(service.getToken()).toBeNull();
   });
 });
+
