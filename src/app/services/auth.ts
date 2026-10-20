@@ -6,7 +6,7 @@ export interface UserSession {
   usuarioId?: number;
   pacienteId?: number;
   profesionalId?: number;
-  email: string;
+  dni: string;
   nombreCompleto: string;
   legajo?: string;
   matricula?: string;
@@ -158,7 +158,7 @@ export class AuthService {
         usuarioId: claims.usuarioId || claims.userId,
         pacienteId: claims.pacienteId,
         profesionalId: claims.profesionalId,
-        email: claims.email || claims.sub || '',
+        dni: claims.dni || claims.cuil || '',
         nombreCompleto: claims.nombreCompleto || claims.name || (claims.email ? claims.email.split('@')[0] : 'Usuario'),
         legajo: claims.legajo,
         matricula: claims.matricula,

@@ -34,7 +34,7 @@ export class LoginMedicoComponent {
       alert('Procesando: Enviando datos al backend...');
       
       const datosLogin = {
-        identificador: this.loginForm.value.matricula, 
+        matricula: this.loginForm.value.matricula, 
         password: this.loginForm.value.password
       };
 

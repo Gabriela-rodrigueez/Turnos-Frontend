@@ -21,7 +21,7 @@ export class LoginPacienteComponent {
     private router: Router
   ) {
     this.loginForm = this.fb.group({
-      cuil: ['', Validators.required], 
+      dni: ['', Validators.required], 
       password: ['', Validators.required]
     });
   }
@@ -31,24 +31,24 @@ export class LoginPacienteComponent {
 
   iniciarSesion() {
     if (this.loginForm.valid) {
-      alert('Procesando: Enviando datos al backend...'); 
       
       const datosLogin = {
-        identificador: this.loginForm.value.cuil,
+        dni: this.loginForm.value.dni, // Cambiado de 'identificador' a 'dni'
         password: this.loginForm.value.password
       };
 
       this.authService.login(datosLogin).subscribe({
         next: () => {
           alert('Ingresaste como paciente');
+          this.router.navigate(['/dashboard-paciente']); // O la ruta a donde deba ir
         },
         error: (err) => {
           console.error('Detalle del error:', err);
-          alert('Error de conexión o datos incorrectos. Revisa que tu CUIL y contraseña sean correctos.');
+          alert('Error de conexión o datos incorrectos. Revisa que tu DNI y contraseña sean correctos.');
         }
       });
     } else {
-      alert('Formulario incompleto: Por favor, ingresa tu CUIL y contraseña.');
+      alert('Formulario incompleto: Por favor, ingresa tu DNI y contraseña.');
     }
   }
 

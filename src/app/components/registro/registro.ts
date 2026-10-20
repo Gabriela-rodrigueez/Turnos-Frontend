@@ -34,10 +34,17 @@ export class RegistroComponent {
       nombre: ['', Validators.required],
       apellido: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
-      cuil: ['', [Validators.required, Validators.minLength(11)]], 
+      
+      
+      dni: ['', [Validators.required, Validators.minLength(7), Validators.maxLength(8), Validators.pattern('^[0-9]{7,8}$')]], 
+      
+      telefono: ['', Validators.required],
+      
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirm_password: ['', Validators.required], 
-      dob: [''],
+      
+      fechaNacimiento: ['', Validators.required],
+      
       gender: [''],
       has_insurance: ['si'],
       provider: [''],
@@ -65,11 +72,12 @@ export class RegistroComponent {
         },
         error: (err: any) => {
           console.error('Error en el registro', err);
-          alert('Hubo un problema al registrar el paciente.');
+          alert('Hubo un problema al registrar el paciente. Revisa la consola para más detalles.');
         }
       });
     } else {
-      alert('Formulario incompleto: Revisa que el CUIL tenga 11 números, que las contraseñas coincidan y la clave tenga al menos 6 caracteres.');
+      
+      alert('Formulario incompleto: Revisa que el DNI tenga 7 u 8 números, que las contraseñas coincidan y hayas completado todos los campos.');
     }
   }
 }

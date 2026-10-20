@@ -32,7 +32,7 @@ export class LoginAdminComponent {
       alert('Procesando: Enviando datos al backend...');
       
       const datosLogin = {
-        identificador: this.loginForm.value.legajo, 
+        legajo: this.loginForm.value.legajo, 
         password: this.loginForm.value.password
       };
 
