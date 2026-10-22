@@ -1,6 +1,6 @@
 import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TurnoService } from '../../services/turno';
 import { AuthService } from '../../services/auth';
@@ -19,7 +19,7 @@ export interface TurnoPaciente {
 @Component({
   selector: 'app-mis-turnos',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink, RouterLinkActive],
   templateUrl: './mis-turnos.html',
   styleUrls: ['./mis-turnos.css']
 })
@@ -31,15 +31,19 @@ export class MisTurnosComponent implements OnInit {
   mensajeExito: string = '';
   pacienteId: number = 1;
 
-  private authService = inject(AuthService);
+  public authService = inject(AuthService);
+  public router = inject(Router);
+  private turnoService = inject(TurnoService);
+  private cdr = inject(ChangeDetectorRef);
 
-  constructor(
-    private turnoService: TurnoService,
-    private router: Router,
-    private cdr: ChangeDetectorRef
-  ) {}
+  constructor() {}
 
   ngOnInit(): void {
+    if (!this.authService.isAuthenticated()) {
+      this.router.navigate(['/login-paciente']);
+      return;
+    }
+
     const dynamicPacienteId = this.authService.getPacienteId();
     if (dynamicPacienteId) {
       this.pacienteId = dynamicPacienteId;
@@ -150,6 +154,11 @@ export class MisTurnosComponent implements OnInit {
   }
 
   irABuscarTurno(): void {
-    this.router.navigate(['/']); // Redirección al buscador principal
+    this.router.navigate(['/buscar']); // Redirección al buscador principal de turnos
+  }
+
+  cerrarSesion(): void {
+    this.authService.logout();
+    this.router.navigate(['/']);
   }
 }

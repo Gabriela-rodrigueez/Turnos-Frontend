@@ -1,92 +1,161 @@
-<div class="mis-turnos-page">
-  <!-- Barra de Navegación y Encabezado -->
-  <div class="top-nav">
-    <div class="brand">
-      <span class="brand-title">SaludMza</span>
-      <span class="badge-oficial">Oficial</span>
-    </div>
-    <div class="nav-links">
-      <button class="btn btn-secundario" (click)="irABuscarTurno()">
-        🔍 Buscar Nuevo Turno
-      </button>
-    </div>
-  </div>
+<div class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col antialiased">
 
-  <div class="header-section">
-    <div>
-      <h2>Mis Turnos Agendados</h2>
-      <p class="subtitulo">Gestión y seguimiento de citas médicas ambulatorias - Provincia de Mendoza</p>
-    </div>
+  <!-- Header Oficial SaludMza -->
+  <header class="bg-white border-b border-gray-200 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      <a routerLink="/buscar" class="flex items-center space-x-3 cursor-pointer group">
+        <div class="w-11 h-11 rounded-xl bg-[#004a8a]/10 flex items-center justify-center text-[#004a8a] group-hover:bg-[#004a8a]/20 transition-colors">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h1 class="text-2xl font-bold tracking-tight text-[#004a8a]">SaludMza</h1>
+            <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">Oficial</span>
+          </div>
+          <p class="text-xs sm:text-sm text-gray-500 font-medium">Gestión de Turnos Provinciales</p>
+        </div>
+      </a>
 
-    <!-- Selector de Paciente para Pruebas (Fácil conmutación entre con turnos y sin turnos 204) -->
-    <div class="paciente-selector">
-      <label for="selectPaciente">Paciente de prueba:</label>
-      <select id="selectPaciente" [ngModel]="pacienteId" (ngModelChange)="cambiarPaciente($event)" class="select-paciente">
-        <option [ngValue]="1">Paciente 1 - Juan González (Posee turnos)</option>
-        <option [ngValue]="2">Paciente 2 - Lucía Martínez (Sin turnos - Caso 204)</option>
-        <option [ngValue]="3">Paciente 3 - Mateo González (Sin turnos - Caso 204)</option>
-      </select>
-    </div>
-  </div>
+      <div class="flex items-center space-x-2 sm:space-x-3">
+        <!-- Botón Buscar Turnos -->
+        <a routerLink="/buscar" routerLinkActive="!bg-[#004a8a] !text-white shadow-xs" [routerLinkActiveOptions]="{exact: true}" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-[#004a8a] bg-blue-50 hover:bg-[#004a8a] hover:text-white border border-blue-100 flex items-center space-x-1 cursor-pointer transition-colors shadow-xs">
+          <span>🔍 Buscar Turnos</span>
+        </a>
 
-  <!-- Alertas de Éxito y Error -->
-  <div *ngIf="mensajeExito" class="alerta alerta-exito">
-    <span>✔ {{ mensajeExito }}</span>
-  </div>
+        <!-- Botón Mis Turnos -->
+        <a routerLink="/mis-turnos" routerLinkActive="!bg-[#004a8a] !text-white shadow-xs" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-[#004a8a] bg-blue-50 hover:bg-[#004a8a] hover:text-white border border-blue-100 flex items-center space-x-1 cursor-pointer transition-colors shadow-xs">
+          <span>📋 Mis Turnos</span>
+        </a>
 
-  <div *ngIf="errorMensaje" class="alerta alerta-error">
-    <span>✖ {{ errorMensaje }}</span>
-    <button class="btn-reintentar" (click)="cargarTurnos()">Reintentar</button>
-  </div>
-
-  <!-- Indicador de Carga -->
-  <div *ngIf="cargando" class="estado-contenedor">
-    <div class="spinner"></div>
-    <p>Consultando sus turnos en el sistema hospitalario...</p>
-  </div>
-
-  <!-- Estado Vacío (Respuesta 204 No Content / Sin turnos) -->
-  <div *ngIf="!cargando && !errorMensaje && turnos.length === 0" class="estado-vacio">
-    <div class="icono-calendario">📅</div>
-    <h3>Sin turnos agendados</h3>
-    <p>Actualmente no posees ningún turno médico programado en el sistema.</p>
-    <button class="btn btn-primario" (click)="irABuscarTurno()">
-      🔍 Buscar y Solicitar Turno
-    </button>
-  </div>
-
-  <!-- Grilla de Tarjetas de Turnos -->
-  <div *ngIf="!cargando && turnos.length > 0" class="turnos-grid">
-    <div *ngFor="let turno of turnos" class="turno-card" [ngClass]="turno.estado.toLowerCase()">
-      <div class="card-header">
-        <span class="especialidad">{{ turno.especialidad }}</span>
-        <span class="badge" [ngClass]="turno.estado.toLowerCase()">{{ turno.estado }}</span>
-      </div>
-
-      <div class="card-body">
-        <p class="profesional">👨‍⚕️ {{ turno.profesionalNombre }}</p>
-        <p class="sede">🏥 {{ turno.sede }}</p>
-        
-        <div *ngIf="turno.motivoConsulta" class="motivo-consulta">
-          <small><strong>Motivo:</strong> {{ turno.motivoConsulta }}</small>
+        <!-- Datos del Usuario -->
+        <div class="hidden sm:block text-right ml-1 pl-3 border-l border-gray-200">
+          <div class="text-xs font-semibold text-gray-900 leading-tight">
+            {{ authService.currentUser()?.nombreCompleto || 'Usuario Ciudadano' }}
+          </div>
+          <div class="text-[10px] text-gray-500 font-mono mt-0.5">
+            Rol: <span class="font-bold uppercase text-[#004a8a]">{{ authService.getRol() || 'PÚBLICO' }}</span>
+          </div>
         </div>
 
-        <div class="fecha-hora">
-          <span>🗓 {{ turno.fecha }}</span>
-          <span>⏰ {{ turno.hora }} hs</span>
+        <div class="w-8 h-8 rounded-full bg-[#004a8a] text-white flex items-center justify-center font-bold text-xs shadow-xs">
+          {{ (authService.currentUser()?.nombreCompleto || 'UC').substring(0, 2).toUpperCase() }}
         </div>
-      </div>
 
-      <!-- Botón de Cancelación solo para turnos activos (RESERVADO) -->
-      <div class="card-footer" *ngIf="turno.estado === 'RESERVADO'">
-        <button class="btn btn-cancelar" (click)="solicitarCancelacion(turno)" [disabled]="cargando">
-          Cancelar Turno
+        <!-- Botón Cerrar Sesión -->
+        <button (click)="cerrarSesion()" title="Cerrar sesión" class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer ml-1">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
         </button>
       </div>
-      
-      <div class="card-footer card-footer-inactivo" *ngIf="turno.estado === 'CANCELADO'">
-        <span class="texto-cancelado">Turno cancelado</span>
+    </div>
+  </header>
+
+  <!-- Contenido Principal -->
+  <main class="flex-grow w-full max-w-5xl mx-auto px-4 sm:px-6 py-8">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+      <div>
+        <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">Mis Turnos Agendados</h2>
+        <p class="text-sm text-gray-600 mt-1">Gestión y seguimiento de citas médicas ambulatorias - Provincia de Mendoza</p>
+      </div>
+
+      <!-- Selector de paciente (para administradores / testing) -->
+      <div *ngIf="!authService.hasRole(['PACIENTE'])" class="flex items-center space-x-2 bg-white px-3 py-2 rounded-lg border border-gray-200 shadow-xs">
+        <label for="selectPaciente" class="text-xs font-semibold text-gray-600">Paciente:</label>
+        <select id="selectPaciente" [ngModel]="pacienteId" (ngModelChange)="cambiarPaciente($event)" class="text-xs font-medium text-gray-800 bg-transparent border-0 focus:ring-0 cursor-pointer">
+          <option [ngValue]="1">Paciente 1 - Juan González</option>
+          <option [ngValue]="2">Paciente 2 - Lucía Martínez (204)</option>
+          <option [ngValue]="3">Paciente 3 - Mateo González (204)</option>
+        </select>
       </div>
     </div>
-  </div>
+
+    <!-- Alertas de Éxito y Error -->
+    <div *ngIf="mensajeExito" class="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <span class="text-emerald-600 font-bold">✓</span>
+        <span class="text-sm font-medium">{{ mensajeExito }}</span>
+      </div>
+    </div>
+
+    <div *ngIf="errorMensaje" class="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <span class="text-red-500 font-bold">⚠️</span>
+        <span class="text-sm font-medium">{{ errorMensaje }}</span>
+      </div>
+      <button (click)="cargarTurnos()" class="text-xs font-bold text-red-700 hover:text-red-900 bg-red-100 hover:bg-red-200 px-3 py-1.5 rounded-lg transition-colors cursor-pointer">
+        Reintentar
+      </button>
+    </div>
+
+    <!-- Indicador de Carga -->
+    <div *ngIf="cargando" class="mt-6 p-12 text-center bg-blue-50/50 rounded-2xl border border-blue-100">
+      <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-[#004a8a] border-t-transparent mb-3"></div>
+      <p class="text-[#004a8a] font-bold">Consultando sus turnos en el sistema hospitalario...</p>
+    </div>
+
+    <!-- Estado Vacío (204 No Content / Sin turnos) -->
+    <div *ngIf="!cargando && !errorMensaje && turnos.length === 0" class="mt-6 p-12 text-center bg-white rounded-2xl border border-gray-200 shadow-xs">
+      <div class="w-16 h-16 rounded-2xl bg-blue-50 text-[#004a8a] flex items-center justify-center mx-auto mb-4 text-2xl">
+        📅
+      </div>
+      <h3 class="text-xl font-bold text-gray-900 mb-1">Sin turnos agendados</h3>
+      <p class="text-sm text-gray-500 max-w-md mx-auto mb-6">Actualmente no posees ningún turno médico programado en el sistema.</p>
+      <button (click)="irABuscarTurno()" class="px-6 py-3 rounded-lg bg-[#004a8a] hover:bg-[#00386b] text-white font-bold text-sm transition-colors shadow-sm inline-flex items-center space-x-2 cursor-pointer">
+        <span>🔍 Buscar y Solicitar Turno</span>
+      </button>
+    </div>
+
+    <!-- Grilla de Tarjetas de Turnos -->
+    <div *ngIf="!cargando && turnos.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div *ngFor="let turno of turnos" class="bg-white border border-gray-200 rounded-xl p-5 shadow-xs hover:shadow-sm transition-shadow flex flex-col justify-between">
+        <div>
+          <div class="flex items-start justify-between mb-3">
+            <span class="text-xs font-bold uppercase tracking-wider text-[#004a8a] bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100">
+              {{ turno.especialidad }}
+            </span>
+            <span [ngClass]="{
+              'bg-emerald-50 text-emerald-700 border-emerald-200': turno.estado === 'RESERVADO',
+              'bg-gray-100 text-gray-500 border-gray-200': turno.estado === 'CANCELADO',
+              'bg-blue-50 text-blue-700 border-blue-200': turno.estado === 'COMPLETADO'
+            }" class="text-[11px] font-bold px-2 py-0.5 rounded-full border">
+              {{ turno.estado }}
+            </span>
+          </div>
+
+          <div class="text-gray-900 font-bold text-lg mb-1">
+            {{ turno.profesionalNombre.startsWith('Dr') ? turno.profesionalNombre : 'Dr/a. ' + turno.profesionalNombre }}
+          </div>
+
+          <div class="text-sm text-gray-500 flex items-center space-x-1.5 mb-3">
+            <span>🏥</span>
+            <span>{{ turno.sede }}</span>
+          </div>
+
+          <div *ngIf="turno.motivoConsulta" class="text-xs text-gray-600 bg-gray-50 p-2.5 rounded-lg border border-gray-100 mb-3">
+            <span class="font-semibold text-gray-700">Motivo:</span> {{ turno.motivoConsulta }}
+          </div>
+
+          <div class="flex items-center space-x-4 text-sm font-semibold text-gray-800 pt-3 border-t border-gray-100">
+            <div class="flex items-center space-x-1.5">
+              <span>🗓</span>
+              <span>{{ turno.fecha }}</span>
+            </div>
+            <div class="flex items-center space-x-1.5">
+              <span>⏰</span>
+              <span>{{ turno.hora }} hs</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botón de Cancelación solo para turnos activos (RESERVADO) -->
+        <div class="mt-4 pt-3 border-t border-gray-100 flex items-center justify-end">
+          <button *ngIf="turno.estado === 'RESERVADO'" (click)="solicitarCancelacion(turno)" [disabled]="cargando" class="text-xs font-bold text-red-600 hover:text-white bg-red-50 hover:bg-red-600 border border-red-200 px-4 py-2 rounded-lg transition-colors cursor-pointer disabled:opacity-50">
+            Cancelar Turno
+          </button>
+          <span *ngIf="turno.estado === 'CANCELADO'" class="text-xs font-medium text-gray-400 italic">
+            Turno cancelado
+          </span>
+        </div>
+      </div>
+    </div>
+  </main>
 </div>

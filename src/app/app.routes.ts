@@ -1,4 +1,9 @@
 import { Routes } from '@angular/router';
+import { PortalComponent } from './components/portal/portal';
+import { RegistroComponent } from './components/registro/registro'; 
+import { LoginPacienteComponent } from './components/login-paciente/login-paciente';
+import { LoginMedicoComponent } from './components/login-medico/login-medico';
+import { LoginAdminComponent } from './components/login-admin/login-admin';
 import { BuscarTurnoComponent } from './components/buscar-turno/buscar-turno';
 import { MisTurnosComponent } from './components/mis-turnos/mis-turnos';
 import { AdminLayoutComponent } from './components/admin/admin-layout/admin-layout';
@@ -6,11 +11,17 @@ import { PanelPrincipalComponent } from './components/admin/panel-principal/pane
 import { NuevaCitaComponent } from './components/admin/nueva-cita/nueva-cita';
 import { RegistroValidacionComponent } from './components/admin/registro-validacion/registro-validacion';
 import { AdminGuard } from './guards/admin.guard';
+import { AuthGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
-  // Ruta por defecto: Portal Ciudadano de Turnos
-  { path: '', component: BuscarTurnoComponent, pathMatch: 'full' },
-  { path: 'mis-turnos', component: MisTurnosComponent },
+  // Rutas públicas del Portal Ciudadano
+  { path: '', component: PortalComponent, pathMatch: 'full' },
+  { path: 'login-paciente', component: LoginPacienteComponent },
+  { path: 'login-medico', component: LoginMedicoComponent },
+  { path: 'login-admin', component: LoginAdminComponent },
+  { path: 'registro', component: RegistroComponent },
+  { path: 'buscar', component: BuscarTurnoComponent },
+  { path: 'mis-turnos', component: MisTurnosComponent, canActivate: [AuthGuard] },
 
   // Módulo Administrativo: Shell Común con Rutas Hijas (Layout con Header y Sidebar fijos)
   { 
@@ -26,13 +37,13 @@ export const routes: Routes = [
   },
 
   // Redirecciones explícitas de autenticación hacia rutas existentes
-  { path: 'auth/registro-paciente', redirectTo: '' },
-  { path: 'auth/registro', redirectTo: '' },
-  { path: 'registro-paciente', redirectTo: '' },
-  { path: 'registro', redirectTo: '' },
-  { path: 'login', redirectTo: '' },
-  { path: 'auth/login', redirectTo: '' },
+  { path: 'auth/registro-paciente', redirectTo: 'registro' },
+  { path: 'auth/registro', redirectTo: 'registro' },
+  { path: 'registro-paciente', redirectTo: 'registro' },
+  { path: 'login', redirectTo: 'login-paciente' },
+  { path: 'auth/login', redirectTo: 'login-paciente' },
 
   // Ruta comodín ante URLs no coincidentes
   { path: '**', redirectTo: '' }
 ];
+

@@ -1,5 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { AuthService } from './auth';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { describe, it, expect, beforeEach } from 'vitest';
 
 describe('AuthService', () => {
@@ -8,14 +10,18 @@ describe('AuthService', () => {
   beforeEach(() => {
     localStorage.clear();
     TestBed.configureTestingModule({
-      providers: [AuthService]
+      providers: [
+        AuthService,
+        provideHttpClient(),
+        provideHttpClientTesting()
+      ]
     });
     service = TestBed.inject(AuthService);
   });
 
-  it('debe inicializarse con sesión administrativa por defecto', () => {
-    expect(service.isAuthenticated()).toBe(true);
-    expect(service.hasRole(['ADMIN', 'ADMINISTRADOR'])).toBe(true);
+  it('debe inicializarse sin sesión si no hay token en storage', () => {
+    expect(service.isAuthenticated()).toBe(false);
+    expect(service.getToken()).toBeNull();
   });
 
   it('debe conmutar a rol MEDICO y decodificar claims correctamente', () => {
@@ -41,3 +47,4 @@ describe('AuthService', () => {
     expect(service.getToken()).toBeNull();
   });
 });
+

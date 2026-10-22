@@ -1,10 +1,12 @@
 import { Injectable, signal, computed } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, tap } from 'rxjs';
 
 export interface UserSession {
   usuarioId?: number;
   pacienteId?: number;
   profesionalId?: number;
-  email: string;
+  dni: string;
   nombreCompleto: string;
   legajo?: string;
   matricula?: string;
@@ -16,6 +18,7 @@ export interface UserSession {
 })
 export class AuthService {
   private readonly TOKEN_KEY = 'auth_token';
+  private apiUrl = 'http://localhost:8080/api/v1/auth';
 
   // Signal reactivo para el token actual
   private tokenSignal = signal<string | null>(this.getInitialToken());
@@ -37,35 +40,55 @@ export class AuthService {
     return this.currentUser()?.rol || null;
   });
 
-  constructor() {
-    // Si no hay token guardado al iniciar, configuramos por defecto la sesión de Operador Administrativo
-    // para habilitar el uso inmediato del Panel Administrativo de Mendoza.
-    if (!localStorage.getItem(this.TOKEN_KEY)) {
-      this.loginAsAdmin();
-    }
+  constructor(private http: HttpClient) {
+    // Inicialización limpia de autenticación basada en localStorage
   }
 
   private getInitialToken(): string | null {
     if (typeof window === 'undefined' || !window.localStorage) return null;
-    return localStorage.getItem(this.TOKEN_KEY);
+    return localStorage.getItem(this.TOKEN_KEY) || localStorage.getItem('token');
   }
 
   getToken(): string | null {
     return this.tokenSignal();
   }
 
+  obtenerToken(): string | null {
+    return this.getToken();
+  }
+
   setToken(token: string): void {
     if (typeof window !== 'undefined' && window.localStorage) {
       localStorage.setItem(this.TOKEN_KEY, token);
+      localStorage.setItem('token', token);
     }
     this.tokenSignal.set(token);
+  }
+
+  guardarToken(token: string): void {
+    this.setToken(token);
   }
 
   logout(): void {
     if (typeof window !== 'undefined' && window.localStorage) {
       localStorage.removeItem(this.TOKEN_KEY);
+      localStorage.removeItem('token');
     }
     this.tokenSignal.set(null);
+  }
+
+  registrarPaciente(datosRegistro: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/registro`, datosRegistro);
+  }
+
+  login(datosLogin: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/login`, datosLogin).pipe(
+      tap((res) => {
+        if (res && res.token) {
+          this.guardarToken(res.token);
+        }
+      })
+    );
   }
 
   getPacienteId(): number | null {
@@ -137,7 +160,7 @@ export class AuthService {
         usuarioId: claims.usuarioId || claims.userId,
         pacienteId: claims.pacienteId,
         profesionalId: claims.profesionalId,
-        email: claims.email || claims.sub || '',
+        dni: claims.dni || claims.cuil || '',
         nombreCompleto: claims.nombreCompleto || claims.name || (claims.email ? claims.email.split('@')[0] : 'Usuario'),
         legajo: claims.legajo,
         matricula: claims.matricula,
@@ -202,3 +225,4 @@ export class AuthService {
     this.setToken(token);
   }
 }
+
