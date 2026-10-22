@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MisTurnosComponent } from './mis-turnos';
 import { TurnoService } from '../../services/turno';
 import { AuthService } from '../../services/auth';
-import { Router } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { HttpResponse } from '@angular/common/http';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -11,6 +11,7 @@ describe('MisTurnosComponent', () => {
   let component: MisTurnosComponent;
   let fixture: ComponentFixture<MisTurnosComponent>;
   let turnoServiceSpy: any;
+  let router: Router;
   let routerSpy: any;
   let authServiceSpy: any;
 
@@ -36,23 +37,26 @@ describe('MisTurnosComponent', () => {
       obtenerTurnosPaciente: vi.fn(),
       cancelarTurno: vi.fn()
     };
-    routerSpy = {
-      navigate: vi.fn()
-    };
     authServiceSpy = {
       getPacienteId: vi.fn().mockReturnValue(1),
       hasRole: vi.fn().mockReturnValue(false),
-      currentUser: vi.fn().mockReturnValue({ pacienteId: 1, rol: 'PACIENTE' })
+      currentUser: vi.fn().mockReturnValue({ pacienteId: 1, rol: 'PACIENTE', nombreCompleto: 'Juan González' }),
+      getRol: vi.fn().mockReturnValue('PACIENTE'),
+      isAuthenticated: vi.fn().mockReturnValue(true),
+      logout: vi.fn()
     };
 
     await TestBed.configureTestingModule({
       imports: [MisTurnosComponent],
       providers: [
+        provideRouter([]),
         { provide: TurnoService, useValue: turnoServiceSpy },
-        { provide: Router, useValue: routerSpy },
         { provide: AuthService, useValue: authServiceSpy }
       ]
     }).compileComponents();
+
+    router = TestBed.inject(Router);
+    routerSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
   });
 
   beforeEach(() => {
@@ -143,8 +147,15 @@ describe('MisTurnosComponent', () => {
     expect(component.errorMensaje).toContain('No se pudieron recuperar los turnos');
   });
 
-  it('debe redirigir a / al invocar irABuscarTurno', () => {
+  it('debe redirigir a /buscar al invocar irABuscarTurno', () => {
     component.irABuscarTurno();
-    expect(routerSpy.navigate).toHaveBeenCalledWith(['/']);
+    expect(routerSpy).toHaveBeenCalledWith(['/buscar']);
+  });
+
+  it('debe redirigir a /login-paciente si el usuario no está autenticado al inicializarse', () => {
+    authServiceSpy.isAuthenticated.mockReturnValue(false);
+    component.ngOnInit();
+    expect(routerSpy).toHaveBeenCalledWith(['/login-paciente']);
+    expect(turnoServiceSpy.obtenerTurnosPaciente).not.toHaveBeenCalled();
   });
 });

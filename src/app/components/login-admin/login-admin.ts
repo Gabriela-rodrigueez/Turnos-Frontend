@@ -1,6 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth'; 
 
@@ -13,10 +13,14 @@ import { AuthService } from '../../services/auth';
 export class LoginAdminComponent {
   loginForm: FormGroup;
   mostrarClave = false;
+  mensajeError: string = '';
+  cargando = false;
 
   constructor(
     private fb: FormBuilder,
-    private authService: AuthService
+    private authService: AuthService,
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {
     this.loginForm = this.fb.group({
       legajo: ['', Validators.required],
@@ -28,9 +32,9 @@ export class LoginAdminComponent {
   }
 
   iniciarSesion() {
+    this.mensajeError = '';
     if (this.loginForm.valid) {
-      alert('Procesando: Enviando datos al backend...');
-      
+      this.cargando = true;
       const datosLogin = {
         legajo: this.loginForm.value.legajo, 
         password: this.loginForm.value.password
@@ -38,15 +42,23 @@ export class LoginAdminComponent {
 
       this.authService.login(datosLogin).subscribe({
         next: () => {
-          alert('Ingresaste como administrador');
+          this.cargando = false;
+          this.cdr.detectChanges();
+          this.router.navigate(['/mis-turnos']);
         },
         error: (err) => {
-          console.error('Detalle del error:', err);
-          alert('Error de conexión o datos incorrectos. Revisa la consola.');
+          this.cargando = false;
+          if (err.status === 401) {
+            this.mensajeError = 'Credenciales incorrectas. Verifique su legajo y contraseña.';
+          } else {
+            this.mensajeError = 'Error al comunicarse con el servidor. Intente nuevamente.';
+          }
+          this.cdr.detectChanges();
         }
       });
     } else {
-      alert('Formulario incompleto: Por favor, ingresa tu legajo y contraseña.');
+      this.mensajeError = 'Por favor, complete su legajo y contraseña.';
+      this.cdr.detectChanges();
     }
   }
 

@@ -19,9 +19,9 @@ describe('AuthService', () => {
     service = TestBed.inject(AuthService);
   });
 
-  it('debe inicializarse con sesión administrativa por defecto', () => {
-    expect(service.isAuthenticated()).toBe(true);
-    expect(service.hasRole(['ADMIN', 'ADMINISTRADOR'])).toBe(true);
+  it('debe inicializarse sin sesión si no hay token en storage', () => {
+    expect(service.isAuthenticated()).toBe(false);
+    expect(service.getToken()).toBeNull();
   });
 
   it('debe conmutar a rol MEDICO y decodificar claims correctamente', () => {

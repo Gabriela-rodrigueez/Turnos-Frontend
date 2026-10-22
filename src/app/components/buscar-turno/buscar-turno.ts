@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { EspecialidadService, Especialidad } from '../../services/especialidad';
 import { SedeService, Sede } from '../../services/sede';
@@ -27,12 +27,13 @@ export interface Turno {
 @Component({
   selector: 'app-buscar-turno',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, RouterLinkActive],
   templateUrl: './buscar-turno.html'
 })
 export class BuscarTurnoComponent implements OnInit {
   private http = inject(HttpClient);
   private cdr = inject(ChangeDetectorRef);
+  public router = inject(Router);
   
   private especialidadService = inject(EspecialidadService);
   private sedeService = inject(SedeService);
@@ -199,5 +200,10 @@ export class BuscarTurnoComponent implements OnInit {
     this.mensajeExito = null;
     this.turnosDisponibles = [];
     this.cdr.detectChanges();
+  }
+
+  cerrarSesion(): void {
+    this.authService.logout();
+    this.router.navigate(['/']);
   }
 }

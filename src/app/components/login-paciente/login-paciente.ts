@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { RouterModule, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
@@ -14,11 +14,14 @@ import { AuthService } from '../../services/auth';
 export class LoginPacienteComponent {
   loginForm: FormGroup;
   mostrarClave = false;
+  mensajeError: string = '';
+  cargando = false;
 
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {
     this.loginForm = this.fb.group({
       dni: ['', Validators.required], 
@@ -30,25 +33,33 @@ export class LoginPacienteComponent {
   }
 
   iniciarSesion() {
+    this.mensajeError = '';
     if (this.loginForm.valid) {
-      
+      this.cargando = true;
       const datosLogin = {
-        dni: this.loginForm.value.dni, // Cambiado de 'identificador' a 'dni'
+        dni: this.loginForm.value.dni,
         password: this.loginForm.value.password
       };
 
       this.authService.login(datosLogin).subscribe({
         next: () => {
-          alert('Ingresaste como paciente');
-          this.router.navigate(['/dashboard-paciente']); // O la ruta a donde deba ir
+          this.cargando = false;
+          this.cdr.detectChanges();
+          this.router.navigate(['/mis-turnos']);
         },
         error: (err) => {
-          console.error('Detalle del error:', err);
-          alert('Error de conexión o datos incorrectos. Revisa que tu DNI y contraseña sean correctos.');
+          this.cargando = false;
+          if (err.status === 401) {
+            this.mensajeError = 'Credenciales incorrectas. Verifique su DNI y contraseña.';
+          } else {
+            this.mensajeError = 'Error al comunicarse con el servidor. Intente nuevamente.';
+          }
+          this.cdr.detectChanges();
         }
       });
     } else {
-      alert('Formulario incompleto: Por favor, ingresa tu DNI y contraseña.');
+      this.mensajeError = 'Por favor, complete su DNI y contraseña.';
+      this.cdr.detectChanges();
     }
   }
 

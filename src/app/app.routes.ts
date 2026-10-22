@@ -11,6 +11,7 @@ import { PanelPrincipalComponent } from './components/admin/panel-principal/pane
 import { NuevaCitaComponent } from './components/admin/nueva-cita/nueva-cita';
 import { RegistroValidacionComponent } from './components/admin/registro-validacion/registro-validacion';
 import { AdminGuard } from './guards/admin.guard';
+import { AuthGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
   // Rutas públicas del Portal Ciudadano
@@ -20,7 +21,7 @@ export const routes: Routes = [
   { path: 'login-admin', component: LoginAdminComponent },
   { path: 'registro', component: RegistroComponent },
   { path: 'buscar', component: BuscarTurnoComponent },
-  { path: 'mis-turnos', component: MisTurnosComponent },
+  { path: 'mis-turnos', component: MisTurnosComponent, canActivate: [AuthGuard] },
 
   // Módulo Administrativo: Shell Común con Rutas Hijas (Layout con Header y Sidebar fijos)
   { 

@@ -1,6 +1,6 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 
 export interface UserSession {
   usuarioId?: number;
@@ -41,11 +41,7 @@ export class AuthService {
   });
 
   constructor(private http: HttpClient) {
-    // Si no hay token guardado al iniciar, configuramos por defecto la sesión de Operador Administrativo
-    // para habilitar el uso inmediato del Panel Administrativo de Mendoza.
-    if (!localStorage.getItem(this.TOKEN_KEY) && !localStorage.getItem('token')) {
-      this.loginAsAdmin();
-    }
+    // Inicialización limpia de autenticación basada en localStorage
   }
 
   private getInitialToken(): string | null {
@@ -86,7 +82,13 @@ export class AuthService {
   }
 
   login(datosLogin: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/login`, datosLogin);
+    return this.http.post<any>(`${this.apiUrl}/login`, datosLogin).pipe(
+      tap((res) => {
+        if (res && res.token) {
+          this.guardarToken(res.token);
+        }
+      })
+    );
   }
 
   getPacienteId(): number | null {

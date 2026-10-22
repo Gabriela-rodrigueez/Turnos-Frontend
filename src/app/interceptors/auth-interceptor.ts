@@ -22,8 +22,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   // Manejamos la respuesta y posibles errores de seguridad
   return next(requestClonada).pipe(
     catchError((error: HttpErrorResponse) => {
-      // Si el token expiró o es inválido, cerramos sesión automáticamente
-      if (error.status === 401 || error.status === 403) {
+      // Si el error 401 proviene del endpoint de login o registro, no interferir con la sesión
+      const esAuthEndpoint = req.url.includes('/api/v1/auth/login') || req.url.includes('/api/v1/auth/registro');
+      if (!esAuthEndpoint && (error.status === 401 || error.status === 403)) {
         authService.logout(); 
       }
       return throwError(() => error);

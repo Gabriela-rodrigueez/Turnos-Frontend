@@ -40,7 +40,7 @@ export class RegistroComponent {
       
       telefono: ['', Validators.required],
       
-      password: ['', [Validators.required, Validators.minLength(6)]],
+      password: ['', [Validators.required, Validators.minLength(8), Validators.pattern('^(?=.*[0-9])(?=.*[a-zA-Z]).{8,}$')]],
       confirm_password: ['', Validators.required], 
       
       fechaNacimiento: ['', Validators.required],
@@ -77,7 +77,7 @@ export class RegistroComponent {
       });
     } else {
       
-      alert('Formulario incompleto: Revisa que el DNI tenga 7 u 8 números, que las contraseñas coincidan y hayas completado todos los campos.');
+      alert('Formulario incompleto: Revisa que el DNI tenga 7 u 8 números, que la contraseña tenga al menos 8 caracteres con letras y números, y que ambas contraseñas coincidan.');
     }
   }
 }
