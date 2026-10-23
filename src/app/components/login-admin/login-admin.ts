@@ -44,7 +44,7 @@ export class LoginAdminComponent {
         next: () => {
           this.cargando = false;
           this.cdr.detectChanges();
-          this.router.navigate(['/mis-turnos']);
+          this.router.navigate(['/agenda']);
         },
         error: (err) => {
           this.cargando = false;

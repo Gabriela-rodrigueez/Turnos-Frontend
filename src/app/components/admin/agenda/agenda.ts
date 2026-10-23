@@ -49,6 +49,9 @@ export class AgendaComponent implements OnInit {
 
   // Modal para Generación Masiva de Slots
   modalGenerarAbierto: boolean = false;
+  genEspecialidadId: number | null = null;
+  genProfesionalId: number | null = null;
+  profesionalesModal: Profesional[] = [];
   genFechaDesde: string = '';
   genFechaHasta: string = '';
   genHoraInicio: string = '08:00';
@@ -173,7 +176,44 @@ export class AgendaComponent implements OnInit {
     this.genHoraFin = '12:00';
     this.genDuracionMinutos = 30;
     this.genModalError = '';
+
+    // Inicializar especialidad del modal con la especialidad seleccionada
+    this.genEspecialidadId = this.especialidadSeleccionada;
+
+    if (this.esMedico) {
+      this.genProfesionalId = this.profesionalSeleccionado;
+    } else {
+      this.genProfesionalId = this.profesionalSeleccionado || null;
+      this.actualizarProfesionalesModal();
+    }
+
+    if (!this.genSedeId && this.sedes.length > 0) {
+      this.genSedeId = this.sedes[0].id;
+    }
+
     this.modalGenerarAbierto = true;
+  }
+
+  onGenEspecialidadChange(): void {
+    this.genProfesionalId = null;
+    this.actualizarProfesionalesModal();
+  }
+
+  actualizarProfesionalesModal(): void {
+    if (!this.genEspecialidadId) {
+      this.profesionalesModal = [];
+      return;
+    }
+    this.profesionalService.getProfesionales(this.genEspecialidadId, this.genSedeId).subscribe({
+      next: (data) => {
+        this.profesionalesModal = data || [];
+        if (this.profesionalesModal.length > 0 && !this.genProfesionalId) {
+          this.genProfesionalId = this.profesionalesModal[0].id;
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error('Error al cargar profesionales para modal', err)
+    });
   }
 
   cerrarModalGenerar(): void {
@@ -184,12 +224,15 @@ export class AgendaComponent implements OnInit {
   generarSlots(): void {
     this.genModalError = '';
 
-    if (!this.especialidadSeleccionada) {
+    const espId = this.genEspecialidadId || this.especialidadSeleccionada;
+    const profId = this.esMedico ? this.profesionalSeleccionado : (this.genProfesionalId || this.profesionalSeleccionado);
+
+    if (!espId) {
       this.genModalError = 'Seleccione la especialidad médica.';
       return;
     }
-    if (!this.profesionalSeleccionado) {
-      this.genModalError = 'Seleccione el profesional médico.';
+    if (!profId) {
+      this.genModalError = 'Seleccione el profesional médico al que se le generará la agenda.';
       return;
     }
     if (!this.genSedeId) {
@@ -216,8 +259,8 @@ export class AgendaComponent implements OnInit {
     }
 
     const payload: GenerarSlotsRequest = {
-      profesionalId: this.profesionalSeleccionado,
-      especialidadId: this.especialidadSeleccionada,
+      profesionalId: profId,
+      especialidadId: espId,
       sedeId: this.genSedeId,
       fechaDesde: this.genFechaDesde,
       fechaHasta: this.genFechaHasta,
@@ -234,6 +277,8 @@ export class AgendaComponent implements OnInit {
         this.cargandoGeneracion = false;
         this.modalGenerarAbierto = false;
         this.mensajeExito = `¡Se generaron con éxito ${res.cantidadSlotsGenerados} slots de turnos en estado DISPONIBLE!`;
+        this.especialidadSeleccionada = espId;
+        this.profesionalSeleccionado = profId;
         this.cargarAgenda(false);
         this.cdr.detectChanges();
       },

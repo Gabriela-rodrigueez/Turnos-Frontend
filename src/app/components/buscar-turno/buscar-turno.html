@@ -27,6 +27,11 @@
           <span>📋 Mis Turnos</span>
         </a>
 
+        <!-- Botón Gestión de Agenda (Para Administradores y Médicos) -->
+        <a *ngIf="authService.hasRole(['ADMINISTRADOR', 'MEDICO'])" routerLink="/agenda" routerLinkActive="!bg-[#004a8a] !text-white shadow-xs" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-[#004a8a] bg-blue-50 hover:bg-[#004a8a] hover:text-white border border-blue-100 flex items-center space-x-1 cursor-pointer transition-colors shadow-xs">
+          <span>📅 Gestión de Agenda</span>
+        </a>
+
         <!-- Datos del Usuario -->
         <div class="hidden sm:block text-right ml-1 pl-3 border-l border-gray-200">
           <div class="text-xs font-semibold text-gray-900 leading-tight">
