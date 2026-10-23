@@ -32,7 +32,7 @@ export interface Turno {
 @Component({
   selector: 'app-buscar-turno',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, RouterLinkActive],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './buscar-turno.html'
 })
 export class BuscarTurnoComponent implements OnInit {

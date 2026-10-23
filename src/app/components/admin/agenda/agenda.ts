@@ -109,17 +109,23 @@ export class AgendaComponent implements OnInit {
       },
       error: (err) => console.error('Error al cargar sedes', err)
     });
+
+    // Para administradores, precargamos la nómina de profesionales y la agenda completa
+    if (!this.esMedico) {
+      this.profesionalService.getProfesionales().subscribe({
+        next: (data) => {
+          this.profesionales = data || [];
+          this.cdr.detectChanges();
+        },
+        error: (err) => console.error('Error al cargar profesionales', err)
+      });
+      this.cargarAgenda();
+    }
   }
 
   onEspecialidadChange(): void {
     this.mensajeError = '';
     this.mensajeExito = '';
-    this.turnos = [];
-
-    if (!this.especialidadSeleccionada) {
-      this.profesionales = [];
-      return;
-    }
 
     if (!this.esMedico) {
       this.profesionalService.getProfesionales(this.especialidadSeleccionada, this.sedeSeleccionada).subscribe({
@@ -135,17 +141,13 @@ export class AgendaComponent implements OnInit {
   }
 
   cargarAgenda(limpiarMensajes: boolean = true): void {
-    if (!this.especialidadSeleccionada) {
-      return;
-    }
-
     this.cargando = true;
     this.mensajeError = '';
     if (limpiarMensajes) {
       this.mensajeExito = '';
     }
 
-    // Consultamos la agenda médica completa (DISPONIBLE, RESERVADO, ASISTIDO, CANCELADO)
+    // Consultamos la agenda médica completa con filtros opcionales
     this.agendaService.obtenerTurnosAgenda(
       this.especialidadSeleccionada,
       this.profesionalSeleccionado,
@@ -167,11 +169,7 @@ export class AgendaComponent implements OnInit {
   }
 
   abrirModalGenerar(): void {
-    if (!this.especialidadSeleccionada) {
-      this.mensajeError = 'Debe seleccionar una especialidad obligatoriamente antes de generar oferta de turnos.';
-      return;
-    }
-
+    this.mensajeError = '';
     const hoy = new Date();
     const dentroDe15Dias = new Date();
     dentroDe15Dias.setDate(hoy.getDate() + 15);
@@ -183,8 +181,12 @@ export class AgendaComponent implements OnInit {
     this.genDuracionMinutos = 30;
     this.genModalError = '';
 
-    // Inicializar especialidad del modal con la especialidad seleccionada
-    this.genEspecialidadId = this.especialidadSeleccionada;
+    // Si ya hay especialidad seleccionada la usamos, sino asignamos la primera del catálogo
+    if (this.especialidadSeleccionada) {
+      this.genEspecialidadId = this.especialidadSeleccionada;
+    } else if (this.especialidades.length > 0) {
+      this.genEspecialidadId = this.especialidades[0].id;
+    }
 
     if (this.esMedico) {
       this.genProfesionalId = this.profesionalSeleccionado;
