@@ -8,7 +8,36 @@ describe('AuthService', () => {
   let service: AuthService;
 
   beforeEach(() => {
-    localStorage.clear();
+    const store: Record<string, string> = {};
+    const mockStorage = {
+      getItem: (key: string) => store[key] || null,
+      setItem: (key: string, value: string) => { store[key] = value; },
+      removeItem: (key: string) => { delete store[key]; },
+      clear: () => {
+        Object.keys(store).forEach(k => delete store[k]);
+      }
+    };
+
+    try {
+      Object.defineProperty(globalThis, 'localStorage', {
+        value: mockStorage,
+        writable: true,
+        configurable: true
+      });
+    } catch (_) {}
+
+    if (typeof window !== 'undefined') {
+      try {
+        Object.defineProperty(window, 'localStorage', {
+          value: mockStorage,
+          writable: true,
+          configurable: true
+        });
+      } catch (_) {}
+    }
+
+    mockStorage.clear();
+
     TestBed.configureTestingModule({
       providers: [
         AuthService,

@@ -1,6 +1,5 @@
 <div class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col antialiased">
 
-
   <!-- Contenido Principal Unificado (Ancho max-w-6xl estandarizado) -->
   <main class="flex-grow w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -29,12 +28,65 @@
       </div>
     </div>
 
+    <!-- Pestañas de Filtro de Grupo Familiar (Titular y Dependientes) -->
+    <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-slate-200">
+      <!-- Todos los Turnos -->
+      <button 
+        (click)="seleccionarFiltro('TODOS')"
+        [ngClass]="{
+          'bg-[#004a8a] text-white shadow-xs font-bold': filtroActivo === 'TODOS',
+          'bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200': filtroActivo !== 'TODOS'
+        }"
+        class="px-3.5 py-2 rounded-xl text-xs whitespace-nowrap transition-all flex items-center space-x-1.5 cursor-pointer">
+        <span>Todos los Turnos</span>
+        <span 
+          [ngClass]="filtroActivo === 'TODOS' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700'"
+          class="text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+          {{ contarTurnos('TODOS') }}
+        </span>
+      </button>
+
+      <!-- Titular -->
+      <button 
+        (click)="seleccionarFiltro(titularId)"
+        [ngClass]="{
+          'bg-[#004a8a] text-white shadow-xs font-bold': filtroActivo === titularId,
+          'bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200': filtroActivo !== titularId
+        }"
+        class="px-3.5 py-2 rounded-xl text-xs whitespace-nowrap transition-all flex items-center space-x-1.5 cursor-pointer">
+        <span>👤 Mis Turnos (Titular)</span>
+        <span 
+          [ngClass]="filtroActivo === titularId ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700'"
+          class="text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+          {{ contarTurnos(titularId) }}
+        </span>
+      </button>
+
+      <!-- Familiares a Cargo -->
+      <button 
+        *ngFor="let fam of familiares"
+        (click)="seleccionarFiltro(fam.id)"
+        [ngClass]="{
+          'bg-[#004a8a] text-white shadow-xs font-bold': filtroActivo === fam.id,
+          'bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200': filtroActivo !== fam.id
+        }"
+        class="px-3.5 py-2 rounded-xl text-xs whitespace-nowrap transition-all flex items-center space-x-1.5 cursor-pointer">
+        <span>👥 {{ fam.nombre }} {{ fam.apellido }}</span>
+        <span 
+          [ngClass]="filtroActivo === fam.id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700'"
+          class="text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+          {{ contarTurnos(fam.id) }}
+        </span>
+      </button>
+    </div>
+
     <!-- Alertas de Éxito y Error -->
     <div *ngIf="mensajeExito" class="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-between">
       <div class="flex items-center space-x-2">
         <span class="text-emerald-600 font-bold">✓</span>
         <span class="text-sm font-medium">{{ mensajeExito }}</span>
       </div>
+      <button (click)="mensajeExito = ''" class="text-emerald-700 hover:text-emerald-900 p-1 text-sm cursor-pointer">✕</button>
     </div>
 
     <div *ngIf="errorMensaje" class="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 flex items-center justify-between">
@@ -59,7 +111,9 @@
         📅
       </div>
       <h3 class="text-xl font-bold text-gray-900 mb-1">Sin turnos agendados</h3>
-      <p class="text-sm text-gray-500 max-w-md mx-auto mb-6">Actualmente no posees ningún turno médico programado en el sistema.</p>
+      <p class="text-sm text-gray-500 max-w-md mx-auto mb-6">
+        {{ filtroActivo === 'TODOS' ? 'Actualmente no posees ningún turno médico programado en el sistema.' : 'No hay turnos registrados para el beneficiario seleccionado.' }}
+      </p>
       <button (click)="irABuscarTurno()" class="px-6 py-3 rounded-lg bg-[#004a8a] hover:bg-[#00386b] text-white font-bold text-sm transition-colors shadow-sm inline-flex items-center space-x-2 cursor-pointer">
         <span>🔍 Buscar y Solicitar Turno</span>
       </button>
@@ -69,6 +123,21 @@
     <div *ngIf="!cargando && turnos.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       <div *ngFor="let turno of turnos" class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs hover:shadow-sm transition-shadow flex flex-col justify-between">
         <div>
+          <!-- Etiqueta Visual Destacada de Beneficiario -->
+          <div class="mb-3">
+            <span 
+              [ngClass]="{
+                'bg-slate-100 text-slate-700 border-slate-200': turno.esTitular,
+                'bg-blue-50 text-[#004a8a] border-blue-200': !turno.esTitular
+              }" 
+              class="inline-flex items-center space-x-1.5 text-xs font-bold px-2.5 py-1 rounded-lg border">
+              <span>{{ turno.esTitular ? '👤' : '👥' }}</span>
+              <span>
+                {{ turno.esTitular ? 'Titular' : 'Beneficiario: ' + turno.beneficiarioNombre + ' (' + turno.beneficiarioParentesco + ')' }}
+              </span>
+            </span>
+          </div>
+
           <div class="flex items-start justify-between mb-3">
             <span class="text-xs font-bold uppercase tracking-wider text-[#004a8a] bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100">
               {{ turno.especialidad }}

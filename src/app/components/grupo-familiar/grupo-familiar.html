@@ -1,0 +1,386 @@
+<div class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col antialiased">
+
+  <!-- Contenedor Principal Estandarizado (max-w-6xl) -->
+  <main class="flex-grow w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+    <!-- Cabecera de la Vista -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <div class="flex items-center space-x-2 text-xs text-slate-500 font-semibold mb-1">
+          <a routerLink="/buscar" class="hover:text-[#004a8a] transition-colors">Portal</a>
+          <span>/</span>
+          <span class="text-slate-800">Grupo Familiar</span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Mi Grupo Familiar a Cargo</h1>
+        <p class="text-sm text-slate-600 mt-1">
+          Administrá tus hijos menores y personas bajo tutela legal para agendar y gestionar turnos médicos en su nombre.
+        </p>
+      </div>
+
+      <!-- Botón de Acción Principal (CTA) -->
+      <div class="flex items-center space-x-3">
+        <button 
+          (click)="abrirModalAgregar()"
+          class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#004a8a] hover:bg-[#00386b] text-white font-bold text-xs uppercase tracking-wider shadow-sm transition-colors flex items-center justify-center space-x-2 cursor-pointer">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          <span>Agregar Familiar a Cargo</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Alertas de Éxito y Error -->
+    <div *ngIf="mensajeExito" class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-between animate-fadeIn">
+      <div class="flex items-center space-x-2.5">
+        <span class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-black">✓</span>
+        <span class="text-xs sm:text-sm font-medium">{{ mensajeExito }}</span>
+      </div>
+      <button (click)="mensajeExito = null" class="text-emerald-700 hover:text-emerald-900 p-1 text-sm cursor-pointer">✕</button>
+    </div>
+
+    <div *ngIf="mensajeError" class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 flex items-center justify-between animate-fadeIn">
+      <div class="flex items-center space-x-2.5">
+        <span class="w-6 h-6 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center text-xs font-black">⚠️</span>
+        <span class="text-xs sm:text-sm font-medium">{{ mensajeError }}</span>
+      </div>
+      <button (click)="cargarFamiliares()" class="text-xs font-bold text-rose-700 hover:text-rose-900 bg-rose-100 hover:bg-rose-200 px-3 py-1.5 rounded-lg transition-colors cursor-pointer">
+        Reintentar
+      </button>
+    </div>
+
+    <!-- Indicador de Carga -->
+    <div *ngIf="cargando" class="p-12 text-center bg-blue-50/50 rounded-2xl border border-blue-100">
+      <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-[#004a8a] border-t-transparent mb-3"></div>
+      <p class="text-[#004a8a] font-bold text-sm">Consultando los familiares a cargo vinculados...</p>
+    </div>
+
+    <!-- Estado Vacío (Empty State) -->
+    <div *ngIf="!cargando && familiares.length === 0" class="p-12 text-center bg-white rounded-2xl border border-slate-200 shadow-xs">
+      <div class="w-16 h-16 rounded-2xl bg-blue-50 text-[#004a8a] flex items-center justify-center mx-auto mb-4 text-3xl shadow-xs">
+        👨‍👩‍👧‍👦
+      </div>
+      <h3 class="text-xl font-bold text-slate-900 mb-1">Sin familiares a cargo registrados</h3>
+      <p class="text-sm text-slate-500 max-w-md mx-auto mb-6">
+        Todavía no has registrado dependientes. Podés vincular a tus hijos menores o personas bajo tutela para solicitar turnos en su nombre con un solo clic.
+      </p>
+      <button 
+        (click)="abrirModalAgregar()"
+        class="px-6 py-3 rounded-xl bg-[#004a8a] hover:bg-[#00386b] text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-sm inline-flex items-center space-x-2 cursor-pointer">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        <span>Registrar Primer Familiar</span>
+      </button>
+    </div>
+
+    <!-- Grilla de Tarjetas de Familiares -->
+    <div *ngIf="!cargando && familiares.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div *ngFor="let familiar of familiares" class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs hover:shadow-sm transition-all flex flex-col justify-between group">
+        <div>
+          <!-- Cabecera de Tarjeta: Avatar + Parentesco + Badge Activo -->
+          <div class="flex items-start justify-between mb-4">
+            <div class="flex items-center space-x-3">
+              <div class="w-11 h-11 rounded-xl bg-[#004a8a]/10 text-[#004a8a] font-black flex items-center justify-center text-sm border border-[#004a8a]/20">
+                {{ familiar.nombre.charAt(0) }}{{ familiar.apellido.charAt(0) }}
+              </div>
+              <div>
+                <h3 class="font-bold text-slate-900 text-base leading-tight group-hover:text-[#004a8a] transition-colors">
+                  {{ familiar.nombre }} {{ familiar.apellido }}
+                </h3>
+                <span class="inline-block mt-0.5 text-xs font-semibold px-2 py-0.5 rounded-md bg-blue-50 text-[#004a8a] border border-blue-100">
+                  {{ familiar.parentesco }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Badge Estado Activo -->
+            <span class="inline-flex items-center space-x-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-300">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              <span>Activo</span>
+            </span>
+          </div>
+
+          <!-- Metadatos del Familiar -->
+          <div class="space-y-2 py-3 border-y border-slate-100 text-xs text-slate-600">
+            <div class="flex justify-between items-center">
+              <span class="text-slate-400 font-semibold uppercase text-[10px] tracking-wider">DNI:</span>
+              <span class="font-mono font-bold text-slate-800">{{ familiar.dni }}</span>
+            </div>
+
+            <div class="flex justify-between items-center">
+              <span class="text-slate-400 font-semibold uppercase text-[10px] tracking-wider">Nacimiento / Edad:</span>
+              <span class="font-medium text-slate-800">
+                {{ formatearFecha(familiar.fechaNacimiento) }} 
+                <span class="font-bold text-[#004a8a]">({{ calcularEdad(familiar.fechaNacimiento) }} años)</span>
+              </span>
+            </div>
+
+            <div class="flex justify-between items-center">
+              <span class="text-slate-400 font-semibold uppercase text-[10px] tracking-wider">Obra Social:</span>
+              <span class="font-semibold text-slate-800 bg-slate-100 px-2 py-0.5 rounded">
+                🏥 {{ familiar.obraSocialNombre || 'Particular / Sin Obra Social' }}
+              </span>
+            </div>
+
+            <div *ngIf="familiar.telefono" class="flex justify-between items-center">
+              <span class="text-slate-400 font-semibold uppercase text-[10px] tracking-wider">Teléfono:</span>
+              <span class="font-medium text-slate-700">{{ familiar.telefono }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Acciones Inferiores -->
+        <div class="mt-4 pt-3 flex items-center justify-between gap-2">
+          <a 
+            routerLink="/buscar" 
+            [queryParams]="{ familiarId: familiar.id }"
+            class="text-xs font-bold text-[#004a8a] hover:text-[#00386b] hover:underline flex items-center space-x-1 cursor-pointer">
+            <span>📅 Reservar Turno</span>
+          </a>
+
+          <!-- Botón Dar de Baja -->
+          <button 
+            (click)="iniciarBaja(familiar)"
+            class="text-xs font-bold text-rose-600 hover:text-white bg-rose-50 hover:bg-rose-600 border border-rose-200 px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center space-x-1.5"
+            title="Dar de baja lógica a este dependiente">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            <span>Dar de baja</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: AGREGAR FAMILIAR A CARGO (Patrón Institucional SaludMza) -->
+  <!-- ========================================================================= -->
+  <div 
+    *ngIf="mostrarModalAgregar" 
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn"
+    (click)="cerrarModalAgregar()">
+
+    <div 
+      class="bg-white rounded-2xl shadow-2xl border border-slate-100 max-w-lg w-full overflow-hidden animate-scaleUp"
+      (click)="$event.stopPropagation()">
+
+      <!-- Cabecera del Modal -->
+      <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+        <div class="flex items-center space-x-3">
+          <div class="w-9 h-9 rounded-xl bg-[#004a8a]/10 text-[#004a8a] flex items-center justify-center font-bold">
+            👨‍👩‍👧
+          </div>
+          <div>
+            <h2 class="text-base font-bold text-slate-900">Agregar Familiar a Cargo</h2>
+            <p class="text-[11px] text-slate-500">Registrá un dependiente para gestionar sus citas médicas</p>
+          </div>
+        </div>
+        <button 
+          (click)="cerrarModalAgregar()" 
+          [disabled]="guardando"
+          class="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition-colors cursor-pointer"
+          title="Cerrar modal (Esc)">
+          ✕
+        </button>
+      </div>
+
+      <!-- Formulario Reactivo -->
+      <form [formGroup]="formFamiliar" (ngSubmit)="guardarFamiliar()" class="p-6 space-y-4">
+
+        <!-- Fila 1: Nombre y Apellido -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">
+              Nombre <span class="text-rose-500">*</span>
+            </label>
+            <input 
+              type="text" 
+              formControlName="nombre" 
+              placeholder="Ej: Mateo"
+              class="w-full h-10 px-3 rounded-lg border text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#004a8a]"
+              [ngClass]="{'border-rose-400 bg-rose-50/30': f['nombre'].touched && f['nombre'].invalid, 'border-slate-300': !f['nombre'].touched || f['nombre'].valid}" />
+            <p *ngIf="f['nombre'].touched && f['nombre'].hasError('required')" class="text-[11px] text-rose-500 mt-1">El nombre es obligatorio.</p>
+            <p *ngIf="f['nombre'].touched && f['nombre'].hasError('minlength')" class="text-[11px] text-rose-500 mt-1">Mínimo 2 caracteres.</p>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">
+              Apellido <span class="text-rose-500">*</span>
+            </label>
+            <input 
+              type="text" 
+              formControlName="apellido" 
+              placeholder="Ej: González"
+              class="w-full h-10 px-3 rounded-lg border text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#004a8a]"
+              [ngClass]="{'border-rose-400 bg-rose-50/30': f['apellido'].touched && f['apellido'].invalid, 'border-slate-300': !f['apellido'].touched || f['apellido'].valid}" />
+            <p *ngIf="f['apellido'].touched && f['apellido'].hasError('required')" class="text-[11px] text-rose-500 mt-1">El apellido es obligatorio.</p>
+            <p *ngIf="f['apellido'].touched && f['apellido'].hasError('minlength')" class="text-[11px] text-rose-500 mt-1">Mínimo 2 caracteres.</p>
+          </div>
+        </div>
+
+        <!-- Fila 2: DNI y Fecha de Nacimiento -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">
+              DNI <span class="text-rose-500">*</span>
+            </label>
+            <input 
+              type="text" 
+              formControlName="dni" 
+              placeholder="7 u 8 dígitos sin puntos"
+              maxlength="8"
+              class="w-full h-10 px-3 rounded-lg border text-sm font-mono transition-all focus:outline-none focus:ring-2 focus:ring-[#004a8a]"
+              [ngClass]="{'border-rose-400 bg-rose-50/30': f['dni'].touched && f['dni'].invalid, 'border-slate-300': !f['dni'].touched || f['dni'].valid}" />
+            <p *ngIf="f['dni'].touched && f['dni'].hasError('required')" class="text-[11px] text-rose-500 mt-1">El DNI es obligatorio.</p>
+            <p *ngIf="f['dni'].touched && f['dni'].hasError('pattern')" class="text-[11px] text-rose-500 mt-1">Debe contener 7 u 8 dígitos numéricos.</p>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">
+              Fecha de Nacimiento <span class="text-rose-500">*</span>
+            </label>
+            <input 
+              type="date" 
+              formControlName="fechaNacimiento" 
+              [max]="fechaMaxima"
+              class="w-full h-10 px-3 rounded-lg border text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#004a8a]"
+              [ngClass]="{'border-rose-400 bg-rose-50/30': f['fechaNacimiento'].touched && f['fechaNacimiento'].invalid, 'border-slate-300': !f['fechaNacimiento'].touched || f['fechaNacimiento'].valid}" />
+            <p *ngIf="f['fechaNacimiento'].touched && f['fechaNacimiento'].hasError('required')" class="text-[11px] text-rose-500 mt-1">La fecha de nacimiento es obligatoria.</p>
+            <p *ngIf="f['fechaNacimiento'].touched && f['fechaNacimiento'].hasError('fechaFutura')" class="text-[11px] text-rose-500 mt-1">La fecha debe ser en el pasado.</p>
+          </div>
+        </div>
+
+        <!-- Fila 3: Parentesco y Obra Social -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">
+              Parentesco <span class="text-rose-500">*</span>
+            </label>
+            <select 
+              formControlName="parentesco"
+              class="w-full h-10 px-3 rounded-lg border border-slate-300 bg-white text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#004a8a] cursor-pointer">
+              <option *ngFor="let p of parentescos" [value]="p.valor">{{ p.label }}</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">
+              Obra Social / Cobertura
+            </label>
+            <select 
+              formControlName="obraSocialId"
+              class="w-full h-10 px-3 rounded-lg border border-slate-300 bg-white text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#004a8a] cursor-pointer">
+              <option *ngFor="let os of obrasSociales" [value]="os.id">{{ os.nombre }}</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Fila 4: Teléfono de Contacto (Opcional) -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">
+            Teléfono de Contacto <span class="text-slate-400 font-normal">(Opcional)</span>
+          </label>
+          <input 
+            type="tel" 
+            formControlName="telefono" 
+            placeholder="Ej: 2614001111"
+            class="w-full h-10 px-3 rounded-lg border border-slate-300 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#004a8a]" />
+        </div>
+
+        <!-- Footer / Botones de Acción -->
+        <div class="pt-4 border-t border-slate-200 flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
+          <button 
+            type="button" 
+            (click)="cerrarModalAgregar()" 
+            [disabled]="guardando"
+            class="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer">
+            Cancelar
+          </button>
+
+          <button 
+            type="submit" 
+            [disabled]="guardando || formFamiliar.invalid"
+            class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-[#004a8a] hover:bg-[#00386b] text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-xs disabled:opacity-50 cursor-pointer flex items-center justify-center space-x-2">
+            <span *ngIf="guardando" class="inline-block animate-spin rounded-full h-3.5 w-3.5 border-2 border-white border-t-transparent"></span>
+            <span>{{ guardando ? 'Registrando...' : 'Guardar Familiar' }}</span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: CONFIRMACIÓN DE BAJA LÓGICA (Soft Delete) -->
+  <!-- ========================================================================= -->
+  <div 
+    *ngIf="familiarABajar" 
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn"
+    (click)="cancelarBaja()">
+
+    <div 
+      class="bg-white rounded-2xl shadow-2xl border border-slate-100 max-w-md w-full overflow-hidden animate-scaleUp"
+      (click)="$event.stopPropagation()">
+
+      <!-- Cabecera -->
+      <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-rose-50/50">
+        <div class="flex items-center space-x-3">
+          <div class="w-9 h-9 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center font-bold">
+            ⚠️
+          </div>
+          <div>
+            <h2 class="text-base font-bold text-slate-900">Confirmar Baja de Familiar</h2>
+            <p class="text-[11px] text-slate-500">Acción de borrado lógico reversible</p>
+          </div>
+        </div>
+        <button 
+          (click)="cancelarBaja()" 
+          [disabled]="eliminando"
+          class="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition-colors cursor-pointer"
+          title="Cerrar modal (Esc)">
+          ✕
+        </button>
+      </div>
+
+      <!-- Contenido Informativo -->
+      <div class="p-6 space-y-4">
+        <p class="text-sm text-slate-700 leading-relaxed">
+          ¿Estás seguro de que deseas dar de baja a 
+          <strong class="text-slate-900">{{ familiarABajar.nombre }} {{ familiarABajar.apellido }}</strong> 
+          (DNI {{ familiarABajar.dni }}) de tu grupo familiar a cargo?
+        </p>
+
+        <!-- Alerta de Protección de Historial -->
+        <div class="p-3.5 rounded-xl bg-sky-50 border border-sky-200 text-xs text-sky-900 flex items-start space-x-2.5">
+          <span class="text-sky-600 font-bold text-sm shrink-0">ℹ️</span>
+          <span>
+            <strong>El historial médico permanece protegido:</strong> La baja lógica quitará a este familiar de tu lista activa para nuevas reservas de turnos, pero <strong>no se perderá su historial clínico ni los turnos previamente agendados</strong>.
+          </span>
+        </div>
+      </div>
+
+      <!-- Botones de Acción -->
+      <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
+        <button 
+          (click)="cancelarBaja()" 
+          [disabled]="eliminando"
+          class="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-slate-300 hover:bg-white text-slate-700 font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer">
+          Cancelar
+        </button>
+
+        <button 
+          (click)="confirmarBaja()" 
+          [disabled]="eliminando"
+          class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-xs disabled:opacity-50 cursor-pointer flex items-center justify-center space-x-2">
+          <span *ngIf="eliminando" class="inline-block animate-spin rounded-full h-3.5 w-3.5 border-2 border-white border-t-transparent"></span>
+          <span>{{ eliminando ? 'Procesando...' : 'Confirmar Baja' }}</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</div>

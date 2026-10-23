@@ -1,12 +1,13 @@
 import { Component, OnInit, inject, ChangeDetectorRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, ActivatedRoute, RouterLink, RouterLinkActive } from '@angular/router';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { EspecialidadService, Especialidad } from '../../services/especialidad';
 import { SedeService, Sede } from '../../services/sede';
 import { ProfesionalService, Profesional } from '../../services/profesional';
 import { AuthService } from '../../services/auth';
+import { FamiliarService, Familiar } from '../../services/familiar';
 
 export interface Turno {
   id: number;
@@ -26,6 +27,9 @@ export interface Turno {
   especialidad?: any;
   motivoConsulta?: string;
   estado?: 'DISPONIBLE' | 'RESERVADO';
+  beneficiarioId?: number;
+  beneficiarioNombre?: string;
+  beneficiarioParentesco?: string;
   [key: string]: any;
 }
 
@@ -39,11 +43,13 @@ export class BuscarTurnoComponent implements OnInit {
   private http = inject(HttpClient);
   private cdr = inject(ChangeDetectorRef);
   public router = inject(Router);
+  private route = inject(ActivatedRoute);
   
   private especialidadService = inject(EspecialidadService);
   private sedeService = inject(SedeService);
   private profesionalService = inject(ProfesionalService);
   public authService = inject(AuthService);
+  private familiarService = inject(FamiliarService);
   
   private apiUrl = 'http://localhost:8080/api/v1/turnos';
 
@@ -51,6 +57,10 @@ export class BuscarTurnoComponent implements OnInit {
   especialidades: Especialidad[] = [];
   profesionales: Profesional[] = [];
   sedes: Sede[] = [];
+
+  // Grupo familiar a cargo
+  familiares: Familiar[] = [];
+  beneficiarioSeleccionadoId: number | null = null;
 
   turnosDisponibles: Turno[] = [];
 
@@ -67,12 +77,53 @@ export class BuscarTurnoComponent implements OnInit {
   mensajeError: string | null = null;
   mensajeExito: string | null = null;
 
+  get titularId(): number {
+    return this.authService.getPacienteId() || 1;
+  }
+
+  get nombreTitular(): string {
+    return this.authService.currentUser()?.nombreCompleto || 'Juan González';
+  }
+
+  get dniTitular(): string {
+    return this.authService.currentUser()?.dni || '35111222';
+  }
+
   ngOnInit(): void {
     if (this.authService.hasRole(['MEDICO'])) {
       this.router.navigate(['/agenda']);
       return;
     }
+
+    // Configurar beneficiario predeterminado (Titular)
+    this.beneficiarioSeleccionadoId = this.titularId;
+
+    // Detectar si viene preseleccionado un familiar desde la URL
+    const queryFamiliarId = this.route.snapshot.queryParamMap.get('familiarId');
+    if (queryFamiliarId) {
+      this.beneficiarioSeleccionadoId = Number(queryFamiliarId);
+    }
+
     this.cargarCatalogos();
+    this.cargarFamiliares();
+  }
+
+  cargarFamiliares(): void {
+    if (!this.authService.isAuthenticated()) return;
+
+    this.familiarService.listarFamiliares(this.titularId).subscribe({
+      next: (lista) => {
+        this.familiares = (lista || []).filter(f => f.isActive !== false && f.isActivo !== false);
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.warn('No se pudieron recuperar los familiares a cargo:', err);
+      }
+    });
+  }
+
+  calcularEdad(fechaNacimiento: string): number {
+    return this.familiarService.calcularEdad(fechaNacimiento);
   }
 
   // Carga inicial de catálogos desde el backend
@@ -163,6 +214,9 @@ export class BuscarTurnoComponent implements OnInit {
     this.turnoSeleccionado = turno;
     this.motivoConsulta = '';
     this.mensajeError = null;
+    if (!this.beneficiarioSeleccionadoId) {
+      this.beneficiarioSeleccionadoId = this.titularId;
+    }
     this.cdr.detectChanges();
   }
 
@@ -196,10 +250,11 @@ export class BuscarTurnoComponent implements OnInit {
 
     const fechaSlot = turno.fechaHoraInicio || turno.fechaHora || turno.fecha_hora;
     const motivo = this.motivoConsulta?.trim() || null;
+    const targetPacienteId = Number(this.beneficiarioSeleccionadoId || this.titularId);
 
     const body = {
       turnoId: turno.id,
-      pacienteId: this.authService.getPacienteId() || 1,
+      pacienteId: targetPacienteId,
       profesionalId: Number(turno.profesionalId || turno.profesional_id || 1),
       especialidadId: Number(turno.especialidadId || turno.especialidad_id || this.espSeleccionada || 1),
       sedeId: Number(turno.sedeId || turno.sede_id || 1),
@@ -207,13 +262,32 @@ export class BuscarTurnoComponent implements OnInit {
       motivoConsulta: motivo
     };
 
-    console.log('Enviando payload de reserva con slot DISPONIBLE:', JSON.stringify(body));
+    console.log('Enviando payload de reserva con slot DISPONIBLE para pacienteId:', targetPacienteId, JSON.stringify(body));
 
     this.http.post<any>(`${this.apiUrl}/reserva`, body).subscribe({
       next: (respuesta) => {
         console.log('Reserva confirmada con éxito:', respuesta);
         this.isLoading = false;
-        this.turnoConfirmado = { ...turno, ...respuesta, fechaHora: fechaSlot, motivoConsulta: motivo || respuesta?.motivoConsulta };
+
+        let benefNombre = this.nombreTitular;
+        let benefParentesco = 'Titular';
+        if (targetPacienteId !== this.titularId) {
+          const fam = this.familiares.find(f => f.id === targetPacienteId);
+          if (fam) {
+            benefNombre = `${fam.nombre} ${fam.apellido}`;
+            benefParentesco = fam.parentesco;
+          }
+        }
+
+        this.turnoConfirmado = { 
+          ...turno, 
+          ...respuesta, 
+          fechaHora: fechaSlot, 
+          motivoConsulta: motivo || respuesta?.motivoConsulta,
+          beneficiarioId: targetPacienteId,
+          beneficiarioNombre: benefNombre,
+          beneficiarioParentesco: benefParentesco
+        };
         this.turnoSeleccionado = null;
         this.mensajeExito = '¡Turno reservado exitosamente!';
         turno.estado = 'RESERVADO';

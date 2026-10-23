@@ -6,6 +6,7 @@ import { LoginMedicoComponent } from './components/login-medico/login-medico';
 import { LoginAdminComponent } from './components/login-admin/login-admin';
 import { BuscarTurnoComponent } from './components/buscar-turno/buscar-turno';
 import { MisTurnosComponent } from './components/mis-turnos/mis-turnos';
+import { GrupoFamiliarComponent } from './components/grupo-familiar/grupo-familiar';
 import { AdminLayoutComponent } from './components/admin/admin-layout/admin-layout';
 import { PanelPrincipalComponent } from './components/admin/panel-principal/panel-principal';
 import { NuevaCitaComponent } from './components/admin/nueva-cita/nueva-cita';
@@ -33,6 +34,8 @@ export const routes: Routes = [
       // Rutas Paciente / Atención
       { path: 'buscar', component: BuscarTurnoComponent, canActivate: [NoMedicoGuard] },
       { path: 'mis-turnos', component: MisTurnosComponent, canActivate: [AuthGuard] },
+      { path: 'perfil/familiares', component: GrupoFamiliarComponent, canActivate: [AuthGuard] },
+      { path: 'familiares', redirectTo: 'perfil/familiares', pathMatch: 'full' },
       { 
         path: 'mi-historial', 
         component: ModuloPlaceholderComponent, 

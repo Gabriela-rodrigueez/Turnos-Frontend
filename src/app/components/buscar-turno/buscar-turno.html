@@ -152,6 +152,91 @@
             </div>
           </div>
 
+          <!-- Selector de Beneficiario: ¿Para quién es este turno? -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center space-x-1.5">
+                <span>👤</span>
+                <span>¿Para quién es este turno?</span>
+              </label>
+              <a 
+                routerLink="/perfil/familiares" 
+                (click)="cancelarSeleccion()"
+                class="text-[11px] font-bold text-[#004a8a] hover:underline flex items-center space-x-1 cursor-pointer">
+                <span>+ Agregar un familiar a cargo</span>
+              </a>
+            </div>
+
+            <div class="space-y-2">
+              <!-- Opción 1: Para mí (Titular) -->
+              <label 
+                class="flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all"
+                [ngClass]="{
+                  'bg-blue-50/70 border-[#004a8a] ring-1 ring-[#004a8a]': beneficiarioSeleccionadoId === titularId,
+                  'bg-slate-50 border-slate-200 hover:border-slate-300': beneficiarioSeleccionadoId !== titularId
+                }">
+                <div class="flex items-center space-x-3">
+                  <input 
+                    type="radio" 
+                    name="beneficiario" 
+                    [value]="titularId" 
+                    [(ngModel)]="beneficiarioSeleccionadoId"
+                    class="text-[#004a8a] focus:ring-[#004a8a] h-4 w-4 cursor-pointer" />
+                  <div>
+                    <div class="text-xs font-bold text-slate-900">
+                      Para mí <span class="font-normal text-slate-500">(Titular: {{ nombreTitular }})</span>
+                    </div>
+                    <p class="text-[11px] text-slate-500">DNI: {{ dniTitular }}</p>
+                  </div>
+                </div>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 border border-slate-300">
+                  Titular
+                </span>
+              </label>
+
+              <!-- Opciones dinámicas: Familiares a cargo -->
+              <div *ngFor="let fam of familiares" class="space-y-2">
+                <label 
+                  class="flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all"
+                  [ngClass]="{
+                    'bg-blue-50/70 border-[#004a8a] ring-1 ring-[#004a8a]': beneficiarioSeleccionadoId === fam.id,
+                    'bg-slate-50 border-slate-200 hover:border-slate-300': beneficiarioSeleccionadoId !== fam.id
+                  }">
+                  <div class="flex items-center space-x-3">
+                    <input 
+                      type="radio" 
+                      name="beneficiario" 
+                      [value]="fam.id" 
+                      [(ngModel)]="beneficiarioSeleccionadoId"
+                      class="text-[#004a8a] focus:ring-[#004a8a] h-4 w-4 cursor-pointer" />
+                    <div>
+                      <div class="text-xs font-bold text-slate-900">
+                        Para {{ fam.nombre }} {{ fam.apellido }}
+                      </div>
+                      <p class="text-[11px] text-slate-500">
+                        {{ fam.parentesco }} • DNI: {{ fam.dni }} • {{ calcularEdad(fam.fechaNacimiento) }} años
+                      </p>
+                    </div>
+                  </div>
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-50 text-sky-800 border border-sky-200">
+                    {{ fam.parentesco }}
+                  </span>
+                </label>
+              </div>
+
+              <!-- Enlace rápido si no tiene familiares -->
+              <div *ngIf="familiares.length === 0" class="p-2.5 rounded-xl bg-slate-50 border border-dashed border-slate-200 text-center">
+                <p class="text-[11px] text-slate-500 mb-1">¿Deseás reservar este turno para un hijo o persona a cargo?</p>
+                <a 
+                  routerLink="/perfil/familiares" 
+                  (click)="cancelarSeleccion()"
+                  class="text-xs font-bold text-[#004a8a] hover:underline inline-flex items-center space-x-1 cursor-pointer">
+                  <span>+ Agregar un familiar a cargo</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
           <!-- Input Opcional: Motivo de la Consulta -->
           <div>
             <div class="flex justify-between items-center mb-1.5">
@@ -198,6 +283,18 @@
       <!-- Ficha del Turno Confirmado (Formato Argentina) -->
       <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 text-left space-y-3 mb-6 text-xs sm:text-sm">
         
+        <!-- Beneficiario del Turno -->
+        <div class="flex items-center justify-between border-b border-slate-200/80 pb-2.5">
+          <span class="font-bold text-slate-500 uppercase text-xs tracking-wider">Beneficiario:</span>
+          <span class="font-bold text-slate-900 flex items-center space-x-1.5">
+            <span>{{ turnoConfirmado.beneficiarioParentesco === 'Titular' ? '👤' : '👥' }}</span>
+            <span>{{ turnoConfirmado.beneficiarioNombre || nombreTitular }}</span>
+            <span class="text-[10px] font-semibold px-2 py-0.5 rounded bg-blue-50 text-[#004a8a] border border-blue-100">
+              {{ turnoConfirmado.beneficiarioParentesco || 'Titular' }}
+            </span>
+          </span>
+        </div>
+
         <!-- Fecha -->
         <div class="flex items-start justify-between border-b border-slate-200/80 pb-2.5">
           <span class="font-bold text-slate-500 uppercase text-xs tracking-wider">Fecha:</span>
