@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
@@ -24,6 +24,7 @@ export interface Turno {
   especialidadId?: number;
   especialidadNombre?: string;
   especialidad?: any;
+  motivoConsulta?: string;
   estado?: 'DISPONIBLE' | 'RESERVADO';
   [key: string]: any;
 }
@@ -60,6 +61,8 @@ export class BuscarTurnoComponent implements OnInit {
   isLoading = false;
   isCatalogLoading = false;
   busquedaRealizada = false;
+  turnoSeleccionado: Turno | null = null;
+  motivoConsulta = '';
   turnoConfirmado: Turno | null = null;
   mensajeError: string | null = null;
   mensajeExito: string | null = null;
@@ -152,6 +155,27 @@ export class BuscarTurnoComponent implements OnInit {
     });
   }
 
+  seleccionarTurno(turno: Turno): void {
+    this.turnoSeleccionado = turno;
+    this.motivoConsulta = '';
+    this.mensajeError = null;
+    this.cdr.detectChanges();
+  }
+
+  cancelarSeleccion(): void {
+    this.turnoSeleccionado = null;
+    this.motivoConsulta = '';
+    this.mensajeError = null;
+    this.cdr.detectChanges();
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapePress(): void {
+    if (this.turnoSeleccionado && !this.isLoading) {
+      this.cancelarSeleccion();
+    }
+  }
+
   // 2. Llamada real para confirmar y reservar el turno sobre slot preexistente
   confirmar(turno: any): void {
     if (!this.authService.isAuthenticated()) {
@@ -167,6 +191,7 @@ export class BuscarTurnoComponent implements OnInit {
     console.log('Turno presionado para reserva en firme:', turno);
 
     const fechaSlot = turno.fechaHoraInicio || turno.fechaHora || turno.fecha_hora;
+    const motivo = this.motivoConsulta?.trim() || null;
 
     const body = {
       turnoId: turno.id,
@@ -175,7 +200,7 @@ export class BuscarTurnoComponent implements OnInit {
       especialidadId: Number(turno.especialidadId || turno.especialidad_id || this.espSeleccionada || 1),
       sedeId: Number(turno.sedeId || turno.sede_id || 1),
       fechaHora: fechaSlot,
-      motivoConsulta: 'Consulta médica ambulatoria'
+      motivoConsulta: motivo
     };
 
     console.log('Enviando payload de reserva con slot DISPONIBLE:', JSON.stringify(body));
@@ -184,7 +209,8 @@ export class BuscarTurnoComponent implements OnInit {
       next: (respuesta) => {
         console.log('Reserva confirmada con éxito:', respuesta);
         this.isLoading = false;
-        this.turnoConfirmado = { ...turno, ...respuesta, fechaHora: fechaSlot };
+        this.turnoConfirmado = { ...turno, ...respuesta, fechaHora: fechaSlot, motivoConsulta: motivo || respuesta?.motivoConsulta };
+        this.turnoSeleccionado = null;
         this.mensajeExito = '¡Turno reservado exitosamente!';
         turno.estado = 'RESERVADO';
         this.cdr.detectChanges();
@@ -263,6 +289,8 @@ export class BuscarTurnoComponent implements OnInit {
 
   reiniciarBusqueda(): void {
     this.turnoConfirmado = null;
+    this.turnoSeleccionado = null;
+    this.motivoConsulta = '';
     this.busquedaRealizada = false;
     this.mensajeError = null;
     this.mensajeExito = null;

@@ -125,9 +125,9 @@
     <div *ngIf="!isLoading && busquedaRealizada && turnosDisponibles.length > 0 && !turnoConfirmado" class="mt-6">
       <h3 class="text-lg font-bold text-gray-900 mb-4">Horarios Disponibles:</h3>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div *ngFor="let turno of turnosDisponibles" class="bg-white border border-gray-200 p-5 rounded-xl shadow-sm flex justify-between items-center">
+        <div *ngFor="let turno of turnosDisponibles" class="bg-white border border-gray-200 p-5 rounded-xl shadow-xs hover:shadow-md hover:border-blue-200 transition-all flex justify-between items-center">
           <div>
-            <p class="font-bold text-gray-900">
+            <p class="font-bold text-gray-900 text-base">
               {{ turno.fechaHoraInicio ? (turno.fechaHoraInicio | date:'dd/MM/yyyy • HH:mm') : (turno.fechaHora ? (turno.fechaHora | date:'dd/MM/yyyy • HH:mm') : turno.fecha) }}
               {{ turno.fechaHoraFin ? (' - ' + (turno.fechaHoraFin | date:'HH:mm') + ' hs') : (' • ' + turno.hora + ' hs') }}
             </p>
@@ -137,10 +137,101 @@
               <span *ngIf="!turno.sedeNombre"> • Presencial</span>
             </p>
           </div>
-          <button (click)="confirmar(turno)" [disabled]="isLoading" class="bg-blue-50 text-[#004a8a] font-bold px-5 py-2.5 rounded-lg hover:bg-[#004a8a] hover:text-white transition-colors disabled:opacity-50">
+          <button (click)="seleccionarTurno(turno)" [disabled]="isLoading" class="bg-blue-50 text-[#004a8a] font-bold px-5 py-2.5 rounded-lg hover:bg-[#004a8a] hover:text-white transition-colors disabled:opacity-50 cursor-pointer shadow-xs">
             Elegir
           </button>
         </div>
+      </div>
+    </div>
+
+    <!-- Modal de Confirmación de Turno (Mejores Prácticas UX/UI) -->
+    <div *ngIf="turnoSeleccionado && !turnoConfirmado" (click)="cancelarSeleccion()" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
+      <div (click)="$event.stopPropagation()" class="bg-white rounded-2xl shadow-2xl border border-slate-100 max-w-lg w-full overflow-hidden animate-scaleUp">
+        
+        <!-- Header del Modal -->
+        <div class="px-6 py-5 bg-gradient-to-r from-blue-50/70 to-slate-50 border-b border-gray-100 flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-[#004a8a]/10 text-[#004a8a] flex items-center justify-center text-lg font-bold">
+              🗓️
+            </div>
+            <div>
+              <h3 class="text-lg font-bold text-gray-900 leading-tight">Confirmar Cita Médica</h3>
+              <p class="text-xs text-gray-500 mt-0.5">Revisá los datos antes de agendar</p>
+            </div>
+          </div>
+          <button (click)="cancelarSeleccion()" title="Cerrar ventana" class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+
+        <!-- Contenido del Modal -->
+        <div class="p-6 space-y-5">
+          
+          <!-- Ficha de Resumen del Turno -->
+          <div class="bg-slate-50/80 border border-slate-200/80 rounded-xl p-4 space-y-2.5 text-xs sm:text-sm">
+            
+            <div class="flex justify-between items-center pb-2 border-b border-slate-200/60">
+              <span class="font-bold text-slate-500 uppercase text-[11px] tracking-wider">Profesional:</span>
+              <span class="font-bold text-slate-900">
+                {{ turnoSeleccionado.profesionalNombreCompleto ? 'Dr/a. ' + turnoSeleccionado.profesionalNombreCompleto : (turnoSeleccionado.profesionalNombre || 'Profesional Médico') }}
+              </span>
+            </div>
+
+            <div class="flex justify-between items-center pb-2 border-b border-slate-200/60">
+              <span class="font-bold text-slate-500 uppercase text-[11px] tracking-wider">Fecha:</span>
+              <span class="font-bold text-slate-900">
+                {{ turnoSeleccionado.fechaHoraInicio ? (turnoSeleccionado.fechaHoraInicio | date:'dd/MM/yyyy') : (turnoSeleccionado.fechaHora | date:'dd/MM/yyyy') }}
+              </span>
+            </div>
+
+            <div class="flex justify-between items-center pb-2 border-b border-slate-200/60">
+              <span class="font-bold text-slate-500 uppercase text-[11px] tracking-wider">Horario:</span>
+              <span class="font-black text-[#004a8a] text-sm">
+                {{ turnoSeleccionado.fechaHoraInicio ? (turnoSeleccionado.fechaHoraInicio | date:'HH:mm') : turnoSeleccionado.hora }}
+                {{ turnoSeleccionado.fechaHoraFin ? (' - ' + (turnoSeleccionado.fechaHoraFin | date:'HH:mm') + ' hs') : ' hs' }}
+              </span>
+            </div>
+
+            <div *ngIf="turnoSeleccionado.sedeNombre" class="flex justify-between items-center">
+              <span class="font-bold text-slate-500 uppercase text-[11px] tracking-wider">Sede:</span>
+              <span class="font-medium text-slate-700">
+                🏥 {{ turnoSeleccionado.sedeNombre }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Input Opcional: Motivo de la Consulta -->
+          <div>
+            <div class="flex justify-between items-center mb-1.5">
+              <label for="motivoConsulta" class="text-xs font-bold text-gray-700 uppercase tracking-wide">
+                Motivo de la consulta <span class="text-gray-400 font-normal lowercase">(opcional)</span>
+              </label>
+              <span class="text-[11px] text-gray-400">{{ motivoConsulta.length }}/200</span>
+            </div>
+            <textarea
+              id="motivoConsulta"
+              rows="3"
+              maxlength="200"
+              [(ngModel)]="motivoConsulta"
+              placeholder="Contanos brevemente el motivo de tu consulta (ej: chequeo anual, dolor lumbar, control de medicación...)"
+              class="w-full p-3 rounded-xl border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-[#004a8a] focus:border-[#004a8a] focus:outline-none transition-shadow resize-none"
+            ></textarea>
+            <p class="text-[11px] text-gray-500 mt-1">Podés dejar este campo vacío si preferís comentarlo directamente con el profesional en la consulta.</p>
+          </div>
+
+        </div>
+
+        <!-- Footer / Acciones del Modal -->
+        <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
+          <button (click)="cancelarSeleccion()" [disabled]="isLoading" class="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-gray-300 hover:bg-white text-gray-700 font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer">
+            Cancelar
+          </button>
+          <button (click)="confirmar(turnoSeleccionado)" [disabled]="isLoading" class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-[#004a8a] hover:bg-[#00386b] text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-xs disabled:opacity-50 cursor-pointer flex items-center justify-center space-x-2">
+            <span *ngIf="isLoading" class="inline-block animate-spin rounded-full h-3.5 w-3.5 border-2 border-white border-t-transparent"></span>
+            <span>{{ isLoading ? 'Confirmando...' : 'Confirmar Turno' }}</span>
+          </button>
+        </div>
+
       </div>
     </div>
 
@@ -192,6 +283,14 @@
           <span class="font-bold text-slate-500 uppercase text-xs tracking-wider">Sede:</span>
           <span class="font-medium text-slate-700">
             🏥 {{ turnoConfirmado.sedeNombre || turnoConfirmado.sede }}
+          </span>
+        </div>
+
+        <!-- Motivo de Consulta (si fue ingresado) -->
+        <div *ngIf="turnoConfirmado.motivoConsulta" class="flex items-center justify-between border-t border-slate-200/80 pt-2.5">
+          <span class="font-bold text-slate-500 uppercase text-xs tracking-wider">Motivo:</span>
+          <span class="font-medium text-slate-700 italic">
+            {{ turnoConfirmado.motivoConsulta }}
           </span>
         </div>
       </div>
