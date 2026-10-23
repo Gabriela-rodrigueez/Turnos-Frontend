@@ -10,6 +10,7 @@ import { AdminLayoutComponent } from './components/admin/admin-layout/admin-layo
 import { PanelPrincipalComponent } from './components/admin/panel-principal/panel-principal';
 import { NuevaCitaComponent } from './components/admin/nueva-cita/nueva-cita';
 import { RegistroValidacionComponent } from './components/admin/registro-validacion/registro-validacion';
+import { AgendaComponent } from './components/admin/agenda/agenda';
 import { AdminGuard } from './guards/admin.guard';
 import { AuthGuard } from './guards/auth.guard';
 
@@ -22,6 +23,10 @@ export const routes: Routes = [
   { path: 'registro', component: RegistroComponent },
   { path: 'buscar', component: BuscarTurnoComponent },
   { path: 'mis-turnos', component: MisTurnosComponent, canActivate: [AuthGuard] },
+
+  // Módulo de Gestión de Agenda Profesional (Vista Propia e Independiente)
+  { path: 'agenda', component: AgendaComponent, canActivate: [AdminGuard] },
+  { path: 'admin/agenda', redirectTo: 'agenda', pathMatch: 'full' },
 
   // Módulo Administrativo: Shell Común con Rutas Hijas (Layout con Header y Sidebar fijos)
   { 

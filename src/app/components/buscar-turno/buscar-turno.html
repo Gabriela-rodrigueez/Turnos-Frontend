@@ -127,7 +127,10 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div *ngFor="let turno of turnosDisponibles" class="bg-white border border-gray-200 p-5 rounded-xl shadow-sm flex justify-between items-center">
           <div>
-            <p class="font-bold text-gray-900">{{ turno.fechaHora ? (turno.fechaHora | date:'dd/MM/yyyy - HH:mm') + ' hs' : (turno.fecha + ' - ' + turno.hora + ' hs') }}</p>
+            <p class="font-bold text-gray-900">
+              {{ turno.fechaHoraInicio ? (turno.fechaHoraInicio | date:'dd/MM/yyyy • HH:mm') : (turno.fechaHora ? (turno.fechaHora | date:'dd/MM/yyyy • HH:mm') : turno.fecha) }}
+              {{ turno.fechaHoraFin ? (' - ' + (turno.fechaHoraFin | date:'HH:mm') + ' hs') : (' • ' + turno.hora + ' hs') }}
+            </p>
             <p class="text-xs text-gray-500 mt-1">
               <span class="font-medium text-gray-800">{{ turno.profesionalNombreCompleto ? 'Dr/a. ' + turno.profesionalNombreCompleto : (turno.profesionalNombre || 'Sin profesional asignado') }}</span>
               <span *ngIf="turno.sedeNombre"> • {{ turno.sedeNombre }}</span>
@@ -142,14 +145,66 @@
     </div>
 
     <!-- Caso: Confirmado Exitosamente -->
-    <div *ngIf="turnoConfirmado" class="mt-6 bg-white p-8 rounded-xl shadow-sm border border-emerald-200 text-center">
-      <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3 text-xl font-bold">✓</div>
+    <div *ngIf="turnoConfirmado" class="mt-6 bg-white p-8 rounded-2xl shadow-sm border border-emerald-200 text-center max-w-xl mx-auto animate-fadeIn">
+      <div class="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3 text-2xl font-bold shadow-xs">
+        ✓
+      </div>
       <h2 class="text-2xl font-bold text-gray-900 mb-1">¡Reserva Exitosa!</h2>
-      <p class="text-sm text-gray-500 mb-4">El turno quedó confirmado en el sistema.</p>
-      <p class="font-bold text-[#004a8a] text-lg mb-6">{{ turnoConfirmado.fechaHora || (turnoConfirmado.fecha + ' - ' + turnoConfirmado.hora + ' hs') }}</p>
-      <button (click)="reiniciarBusqueda()" class="px-6 border-2 border-[#004a8a] text-[#004a8a] font-bold py-2.5 rounded-lg hover:bg-blue-50 transition-colors">
-        Realizar otra búsqueda
-      </button>
+      <p class="text-xs sm:text-sm text-gray-500 mb-5">El turno médico quedó confirmado en el sistema provincial.</p>
+
+      <!-- Ficha del Turno Confirmado (Formato Argentina) -->
+      <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 text-left space-y-3 mb-6 text-xs sm:text-sm">
+        
+        <!-- Fecha -->
+        <div class="flex items-start justify-between border-b border-slate-200/80 pb-2.5">
+          <span class="font-bold text-slate-500 uppercase text-xs tracking-wider">Fecha:</span>
+          <span class="font-bold text-slate-900 text-right">
+            {{ fechaConfirmadaFormateada }}
+          </span>
+        </div>
+
+        <!-- Horario -->
+        <div class="flex items-center justify-between border-b border-slate-200/80 pb-2.5">
+          <span class="font-bold text-slate-500 uppercase text-xs tracking-wider">Horario:</span>
+          <span class="font-black text-[#004a8a] text-base">
+            {{ horaConfirmadaFormateada }}
+          </span>
+        </div>
+
+        <!-- Especialidad -->
+        <div *ngIf="turnoConfirmado.especialidadNombre || turnoConfirmado.especialidad" class="flex items-center justify-between border-b border-slate-200/80 pb-2.5">
+          <span class="font-bold text-slate-500 uppercase text-xs tracking-wider">Especialidad:</span>
+          <span class="font-bold text-sky-800 bg-sky-50 px-2.5 py-0.5 rounded border border-sky-200 text-xs">
+            {{ turnoConfirmado.especialidadNombre || turnoConfirmado.especialidad }}
+          </span>
+        </div>
+
+        <!-- Profesional -->
+        <div *ngIf="turnoConfirmado.profesionalNombreCompleto || turnoConfirmado.profesionalNombre" class="flex items-center justify-between border-b border-slate-200/80 pb-2.5">
+          <span class="font-bold text-slate-500 uppercase text-xs tracking-wider">Profesional:</span>
+          <span class="font-bold text-slate-800">
+            {{ turnoConfirmado.profesionalNombreCompleto || turnoConfirmado.profesionalNombre }}
+          </span>
+        </div>
+
+        <!-- Sede -->
+        <div *ngIf="turnoConfirmado.sedeNombre || turnoConfirmado.sede" class="flex items-center justify-between">
+          <span class="font-bold text-slate-500 uppercase text-xs tracking-wider">Sede:</span>
+          <span class="font-medium text-slate-700">
+            🏥 {{ turnoConfirmado.sedeNombre || turnoConfirmado.sede }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Acciones de Navegación -->
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+        <a routerLink="/mis-turnos" class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-[#004a8a] hover:bg-[#00386b] text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-xs text-center cursor-pointer">
+          📋 Ver Mis Turnos
+        </a>
+        <button (click)="reiniciarBusqueda()" class="w-full sm:w-auto px-6 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer">
+          Realizar otra búsqueda
+        </button>
+      </div>
     </div>
   </main>
 </div>

@@ -113,9 +113,9 @@
               {{ turno.especialidad }}
             </span>
             <span [ngClass]="{
-              'bg-emerald-50 text-emerald-700 border-emerald-200': turno.estado === 'RESERVADO',
-              'bg-gray-100 text-gray-500 border-gray-200': turno.estado === 'CANCELADO',
-              'bg-blue-50 text-blue-700 border-blue-200': turno.estado === 'COMPLETADO'
+              'bg-blue-50 text-blue-700 border-blue-200': turno.estado === 'RESERVADO',
+              'bg-emerald-50 text-emerald-700 border-emerald-200': turno.estado === 'ASISTIDO' || turno.estado === 'COMPLETADO',
+              'bg-gray-100 text-gray-500 border-gray-200': turno.estado === 'CANCELADO'
             }" class="text-[11px] font-bold px-2 py-0.5 rounded-full border">
               {{ turno.estado }}
             </span>
@@ -146,11 +146,15 @@
           </div>
         </div>
 
-        <!-- Botón de Cancelación solo para turnos activos (RESERVADO) -->
+        <!-- Botón de Cancelación solo para turnos activos (RESERVADO) o resolución clínica -->
         <div class="mt-4 pt-3 border-t border-gray-100 flex items-center justify-end">
           <button *ngIf="turno.estado === 'RESERVADO'" (click)="solicitarCancelacion(turno)" [disabled]="cargando" class="text-xs font-bold text-red-600 hover:text-white bg-red-50 hover:bg-red-600 border border-red-200 px-4 py-2 rounded-lg transition-colors cursor-pointer disabled:opacity-50">
             Cancelar Turno
           </button>
+          <span *ngIf="turno.estado === 'ASISTIDO' || turno.estado === 'COMPLETADO'" class="text-xs font-bold text-emerald-700 flex items-center space-x-1">
+            <span>✓</span>
+            <span>Atención completada</span>
+          </span>
           <span *ngIf="turno.estado === 'CANCELADO'" class="text-xs font-medium text-gray-400 italic">
             Turno cancelado
           </span>

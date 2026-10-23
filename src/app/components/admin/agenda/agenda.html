@@ -1,0 +1,503 @@
+<div class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col antialiased">
+
+  <!-- ========================================================================= -->
+  <!-- HEADER PROFESIONAL OFICIAL SaludMza -->
+  <!-- ========================================================================= -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      
+      <!-- Identidad Visual SaludMza -->
+      <div class="flex items-center space-x-3">
+        <div class="w-11 h-11 rounded-xl bg-[#004a8a]/10 flex items-center justify-center text-[#004a8a]">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h1 class="text-2xl font-bold tracking-tight text-[#004a8a]">SaludMza</h1>
+            <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-sky-50 text-sky-800 border border-sky-200">
+              Portal Profesional
+            </span>
+          </div>
+          <p class="text-xs sm:text-sm text-slate-500 font-medium">Gestión de Agenda y Disponibilidad Médica</p>
+        </div>
+      </div>
+
+      <!-- Datos del Usuario y Cierre de Sesión -->
+      <div class="flex items-center space-x-3">
+        <div class="hidden sm:block text-right pr-3 border-r border-slate-200">
+          <div class="text-xs font-bold text-slate-900 leading-tight">
+            {{ authService.currentUser()?.nombreCompleto || 'Profesional Médico' }}
+          </div>
+          <div class="text-[11px] text-slate-500 font-mono mt-0.5">
+            Rol: <span class="font-bold text-[#004a8a]">{{ authService.currentUser()?.rol || 'MÉDICO' }}</span>
+          </div>
+        </div>
+
+        <!-- Avatar con Iniciales -->
+        <div class="w-9 h-9 rounded-full bg-[#004a8a] text-white flex items-center justify-center font-bold text-xs shadow-xs">
+          {{ (authService.currentUser()?.nombreCompleto || 'MD').substring(0, 2).toUpperCase() }}
+        </div>
+
+        <!-- Botón Cerrar Sesión -->
+        <button 
+          (click)="cerrarSesion()" 
+          title="Cerrar sesión" 
+          class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors cursor-pointer ml-1">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ========================================================================= -->
+  <!-- CONTENIDO PRINCIPAL -->
+  <!-- ========================================================================= -->
+  <main class="flex-grow w-full max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+
+    <!-- Encabezado de la Sección con Acción Principal -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2">
+      <div>
+        <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Mi Agenda y Cupos de Atención</h2>
+        <p class="text-sm text-slate-600 mt-1">Configuración de intervalos horarios, prevención de solapamientos y control de asistencia.</p>
+      </div>
+
+      <!-- Botón Primario: Generar Oferta de Turnos -->
+      <button 
+        (click)="abrirModalGenerar()" 
+        class="inline-flex items-center space-x-2 px-5 py-3 rounded-xl bg-[#004a8a] hover:bg-[#00386b] text-white font-bold text-xs uppercase tracking-wider transition-all shadow-sm hover:shadow-md cursor-pointer group">
+        <svg class="w-4 h-4 group-hover:rotate-90 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        <span>+ Generar Oferta de Turnos</span>
+      </button>
+    </div>
+
+    <!-- Alertas de Éxito y Error -->
+    <div *ngIf="mensajeExito" class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-between text-xs sm:text-sm font-medium animate-fadeIn">
+      <div class="flex items-center space-x-2.5">
+        <span class="text-emerald-600 font-bold text-base">✓</span>
+        <span>{{ mensajeExito }}</span>
+      </div>
+      <button (click)="mensajeExito = ''" class="text-emerald-600 hover:text-emerald-900 font-bold text-xs cursor-pointer">Cerrar</button>
+    </div>
+
+    <div *ngIf="mensajeError" class="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 flex items-center justify-between text-xs sm:text-sm font-medium animate-fadeIn">
+      <div class="flex items-center space-x-2.5">
+        <span class="text-red-500 font-bold text-base">⚠️</span>
+        <span>{{ mensajeError }}</span>
+      </div>
+      <button (click)="mensajeError = ''" class="text-red-600 hover:text-red-900 font-bold text-xs cursor-pointer">Cerrar</button>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- TARJETAS DE MÉTRICAS OPERATIVAS (DATOS REALES, CERO MOCKS) -->
+    <!-- ========================================================================= -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <!-- Total Slots -->
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+        <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Slots</div>
+        <div class="text-2xl font-black text-slate-900 mt-1">{{ turnos.length }}</div>
+        <div class="text-[10px] text-slate-400 mt-0.5">En la agenda consultada</div>
+      </div>
+
+      <!-- Disponibles -->
+      <div class="bg-white p-4 rounded-xl border border-sky-100 shadow-xs">
+        <div class="text-[11px] font-bold text-sky-700 uppercase tracking-wider">Libres / Disponibles</div>
+        <div class="text-2xl font-black text-sky-800 mt-1">{{ totalDisponibles }}</div>
+        <div class="text-[10px] text-sky-600 mt-0.5">Visibles a la ciudadanía</div>
+      </div>
+
+      <!-- Reservados -->
+      <div class="bg-white p-4 rounded-xl border border-amber-100 shadow-xs">
+        <div class="text-[11px] font-bold text-amber-700 uppercase tracking-wider">Citas Reservadas</div>
+        <div class="text-2xl font-black text-amber-800 mt-1">{{ totalReservados }}</div>
+        <div class="text-[10px] text-amber-600 mt-0.5">Pacientes confirmados</div>
+      </div>
+
+      <!-- Atendidos -->
+      <div class="bg-white p-4 rounded-xl border border-emerald-100 shadow-xs">
+        <div class="text-[11px] font-bold text-emerald-700 uppercase tracking-wider">Atenciones Completadas</div>
+        <div class="text-2xl font-black text-emerald-800 mt-1">{{ totalAsistidos }}</div>
+        <div class="text-[10px] text-emerald-600 mt-0.5">Marcados como asistidos</div>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- FILTROS DE CONSULTA (Especialidad Obligatoria) -->
+    <!-- ========================================================================= -->
+    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="flex items-center space-x-2">
+          <span class="text-base text-[#004a8a]">🔍</span>
+          <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">
+            Filtros de Búsqueda de Agenda
+          </h3>
+        </div>
+        <span class="text-[11px] font-semibold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-md border border-rose-200">
+          * Especialidad requerida
+        </span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+        
+        <!-- 1. Especialidad Médica (OBLIGATORIA) -->
+        <div class="flex flex-col space-y-1.5">
+          <label for="filtroEspecialidad" class="font-bold text-slate-700">
+            Especialidad Médica <span class="text-rose-500">*</span>
+          </label>
+          <select 
+            id="filtroEspecialidad" 
+            [(ngModel)]="especialidadSeleccionada" 
+            (change)="onEspecialidadChange()"
+            class="h-10 px-3 rounded-lg border border-slate-300 bg-white text-slate-800 font-medium focus:ring-2 focus:ring-[#004a8a] focus:outline-none">
+            <option [ngValue]="null">-- Seleccione Especialidad --</option>
+            <option *ngFor="let esp of especialidades" [ngValue]="esp.id">{{ esp.nombre }}</option>
+          </select>
+        </div>
+
+        <!-- 2. Profesional Médico -->
+        <div class="flex flex-col space-y-1.5">
+          <label for="filtroProfesional" class="font-bold text-slate-700">
+            Profesional Médico
+          </label>
+          
+          <!-- Si es médico logueado, aparece bloqueado con su identidad -->
+          <input 
+            *ngIf="esMedico" 
+            type="text" 
+            [value]="nombreMedicoFijo" 
+            disabled 
+            class="h-10 px-3 rounded-lg border border-slate-200 bg-slate-100 text-slate-600 font-semibold cursor-not-allowed">
+
+          <!-- Si es admin, puede elegir el profesional -->
+          <select 
+            *ngIf="!esMedico" 
+            id="filtroProfesional" 
+            [(ngModel)]="profesionalSeleccionado" 
+            (change)="cargarAgenda()"
+            [disabled]="!especialidadSeleccionada"
+            class="h-10 px-3 rounded-lg border border-slate-300 bg-white text-slate-800 font-medium focus:ring-2 focus:ring-[#004a8a] focus:outline-none disabled:bg-slate-50 disabled:text-slate-400">
+            <option [ngValue]="null">Todos los profesionales</option>
+            <option *ngFor="let prof of profesionales" [ngValue]="prof.id">{{ prof.nombre }} {{ prof.apellido }}</option>
+          </select>
+        </div>
+
+        <!-- 3. Sede Hospitalaria -->
+        <div class="flex flex-col space-y-1.5">
+          <label for="filtroSede" class="font-bold text-slate-700">Sede Hospitalaria</label>
+          <select 
+            id="filtroSede" 
+            [(ngModel)]="sedeSeleccionada" 
+            (change)="cargarAgenda()"
+            class="h-10 px-3 rounded-lg border border-slate-300 bg-white text-slate-800 font-medium focus:ring-2 focus:ring-[#004a8a] focus:outline-none">
+            <option [ngValue]="null">Todas las sedes</option>
+            <option *ngFor="let s of sedes" [ngValue]="s.id">{{ s.nombre }}</option>
+          </select>
+        </div>
+
+        <!-- 4. Fecha de Consulta -->
+        <div class="flex flex-col space-y-1.5">
+          <div class="flex items-center justify-between">
+            <label for="filtroFecha" class="font-bold text-slate-700">Fecha de Consulta</label>
+            <div class="flex space-x-1.5 text-[10px]">
+              <button (click)="establecerFechaHoy()" class="text-[#004a8a] hover:underline font-bold cursor-pointer">Hoy</button>
+              <span class="text-slate-300">|</span>
+              <button (click)="limpiarFecha()" class="text-slate-500 hover:underline cursor-pointer">Todas</button>
+            </div>
+          </div>
+          <input 
+            id="filtroFecha" 
+            type="date" 
+            [(ngModel)]="fechaSeleccionada" 
+            (change)="cargarAgenda()"
+            class="h-10 px-3 rounded-lg border border-slate-300 bg-white text-slate-800 font-medium focus:ring-2 focus:ring-[#004a8a] focus:outline-none">
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- TABS DE FILTRO RÁPIDO POR ESTADO CLÍNICO -->
+    <!-- ========================================================================= -->
+    <div *ngIf="especialidadSeleccionada" class="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-3">
+      <button 
+        (click)="filtroEstado = 'TODOS'"
+        [ngClass]="filtroEstado === 'TODOS' ? 'bg-[#004a8a] text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'"
+        class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer">
+        Todos ({{ turnos.length }})
+      </button>
+
+      <button 
+        (click)="filtroEstado = 'DISPONIBLE'"
+        [ngClass]="filtroEstado === 'DISPONIBLE' ? 'bg-sky-700 text-white shadow-xs' : 'bg-white text-sky-800 hover:bg-sky-50 border border-sky-200'"
+        class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer">
+        Disponibles ({{ totalDisponibles }})
+      </button>
+
+      <button 
+        (click)="filtroEstado = 'RESERVADO'"
+        [ngClass]="filtroEstado === 'RESERVADO' ? 'bg-amber-600 text-white shadow-xs' : 'bg-white text-amber-800 hover:bg-amber-50 border border-amber-200'"
+        class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer">
+        Reservados ({{ totalReservados }})
+      </button>
+
+      <button 
+        (click)="filtroEstado = 'ASISTIDO'"
+        [ngClass]="filtroEstado === 'ASISTIDO' ? 'bg-emerald-700 text-white shadow-xs' : 'bg-white text-emerald-800 hover:bg-emerald-50 border border-emerald-200'"
+        class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer">
+        Asistidos ({{ totalAsistidos }})
+      </button>
+
+      <button 
+        (click)="filtroEstado = 'CANCELADO'"
+        [ngClass]="filtroEstado === 'CANCELADO' ? 'bg-slate-700 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'"
+        class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer">
+        Cancelados ({{ totalCancelados }})
+      </button>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- TABLERO DE TURNOS Y GESTIÓN DE ACCIONES CLÍNICAS -->
+    <!-- ========================================================================= -->
+    
+    <!-- Mensaje: Si no ha seleccionado Especialidad -->
+    <div *ngIf="!especialidadSeleccionada" class="p-12 text-center bg-white rounded-2xl border border-slate-200 shadow-xs">
+      <div class="w-14 h-14 rounded-2xl bg-blue-50 text-[#004a8a] flex items-center justify-center mx-auto mb-3 text-2xl font-bold">
+        🩺
+      </div>
+      <h3 class="text-base font-bold text-slate-900">Seleccione una Especialidad Médica</h3>
+      <p class="text-xs sm:text-sm text-slate-500 mt-1 max-w-md mx-auto">
+        Para consultar y organizar su agenda médica, seleccione la especialidad en el panel de filtros superior.
+      </p>
+    </div>
+
+    <!-- Spinner de Carga -->
+    <div *ngIf="cargando" class="p-12 text-center bg-blue-50/50 rounded-2xl border border-blue-100">
+      <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-[#004a8a] border-t-transparent mb-3"></div>
+      <p class="text-xs font-bold text-[#004a8a]">Cargando turnos y slots de la agenda...</p>
+    </div>
+
+    <!-- Sin turnos encontrados -->
+    <div *ngIf="!cargando && especialidadSeleccionada && turnosFiltrados.length === 0" class="p-12 text-center bg-white rounded-2xl border border-slate-200 shadow-xs">
+      <div class="w-14 h-14 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3 text-2xl">
+        📅
+      </div>
+      <h3 class="text-base font-bold text-slate-900">No se encontraron turnos con los filtros actuales</h3>
+      <p class="text-xs sm:text-sm text-slate-500 mt-1 max-w-md mx-auto mb-5">
+        No hay registros disponibles para el criterio seleccionado. Podés generar nuevos cupos de atención fácilmente.
+      </p>
+      <button 
+        (click)="abrirModalGenerar()" 
+        class="px-5 py-2.5 rounded-xl bg-[#004a8a] hover:bg-[#00386b] text-white font-bold text-xs shadow-xs transition-colors cursor-pointer inline-flex items-center space-x-2">
+        <span>+ Generar Oferta de Cupos</span>
+      </button>
+    </div>
+
+    <!-- Grilla de Slots de Turnos -->
+    <div *ngIf="!cargando && turnosFiltrados.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div 
+        *ngFor="let turno of turnosFiltrados" 
+        class="bg-white border rounded-xl p-5 shadow-xs hover:shadow-sm transition-shadow flex flex-col justify-between"
+        [ngClass]="{
+          'border-sky-200 bg-sky-50/15': turno.estado === 'DISPONIBLE',
+          'border-amber-200 bg-amber-50/15': turno.estado === 'RESERVADO',
+          'border-emerald-200 bg-emerald-50/15': turno.estado === 'ASISTIDO',
+          'border-slate-200 bg-slate-50/60 opacity-80': turno.estado === 'CANCELADO'
+        }">
+        
+        <!-- Header de la tarjeta -->
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full border uppercase tracking-wider"
+              [ngClass]="{
+                'bg-sky-50 text-sky-800 border-sky-200': turno.estado === 'DISPONIBLE',
+                'bg-amber-50 text-amber-800 border-amber-300': turno.estado === 'RESERVADO',
+                'bg-emerald-50 text-emerald-800 border-emerald-300': turno.estado === 'ASISTIDO',
+                'bg-slate-100 text-slate-600 border-slate-300': turno.estado === 'CANCELADO'
+              }">
+              {{ turno.estado }}
+            </span>
+            <span class="text-xs font-mono font-bold text-slate-400">#{{ turno.id }}</span>
+          </div>
+
+          <!-- Horario Rango -->
+          <div class="flex items-center space-x-1.5 text-base font-black text-slate-900 mb-2">
+            <svg class="w-4 h-4 text-[#004a8a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>
+              {{ turno.fechaHoraInicio ? (turno.fechaHoraInicio | date:'dd/MM/yyyy • HH:mm') : turno.fecha }} 
+              {{ turno.fechaHoraFin ? (' - ' + (turno.fechaHoraFin | date:'HH:mm') + ' hs') : (' • ' + turno.hora + ' hs') }}
+            </span>
+          </div>
+
+          <!-- Datos del profesional y sede -->
+          <p class="text-xs font-bold text-slate-700 truncate">
+            {{ turno.profesionalNombreCompleto || turno.profesionalNombre || 'Sin profesional asignado' }}
+          </p>
+          <p class="text-[11px] text-slate-500 flex items-center space-x-1 mt-0.5">
+            <span>🏥</span>
+            <span>{{ turno.sedeNombre || 'Sede Central' }}</span>
+          </p>
+
+          <!-- Información del Paciente (si está RESERVADO o ASISTIDO) -->
+          <div *ngIf="turno.pacienteNombreCompleto || turno.motivoConsulta" class="mt-3 p-3 rounded-lg bg-white border border-slate-200 text-xs shadow-2xs">
+            <p *ngIf="turno.pacienteNombreCompleto" class="font-bold text-slate-800 flex items-center space-x-1">
+              <span>👤</span>
+              <span>{{ turno.pacienteNombreCompleto }}</span>
+            </p>
+            <p *ngIf="turno.motivoConsulta" class="text-slate-600 mt-1 italic text-[11px]">
+              "{{ turno.motivoConsulta }}"
+            </p>
+          </div>
+        </div>
+
+        <!-- Acciones Clínicas por Estado -->
+        <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-end space-x-2">
+          <!-- Si está DISPONIBLE: Opción de eliminar slot libre -->
+          <button 
+            *ngIf="turno.estado === 'DISPONIBLE'"
+            (click)="eliminarSlot(turno)"
+            class="px-3 py-1.5 rounded-lg text-xs font-bold text-red-600 hover:text-white bg-red-50 hover:bg-red-600 border border-red-200 transition-colors cursor-pointer">
+            Eliminar Cupo
+          </button>
+
+          <!-- Si está RESERVADO: Marcar Asistido y Cancelar Cita -->
+          <button 
+            *ngIf="turno.estado === 'RESERVADO'"
+            (click)="marcarAsistido(turno)"
+            class="px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors shadow-xs cursor-pointer flex items-center space-x-1">
+            <span>✓</span>
+            <span>Marcar Asistido</span>
+          </button>
+
+          <button 
+            *ngIf="turno.estado === 'RESERVADO'"
+            (click)="cancelarTurno(turno)"
+            class="px-3 py-1.5 rounded-lg text-xs font-bold text-rose-600 hover:bg-rose-50 border border-rose-200 transition-colors cursor-pointer">
+            Cancelar Cita
+          </button>
+
+          <!-- Estado ASISTIDO -->
+          <span *ngIf="turno.estado === 'ASISTIDO'" class="text-xs font-bold text-emerald-700 flex items-center space-x-1">
+            <span>✓</span>
+            <span>Atención completada</span>
+          </span>
+
+          <!-- Estado CANCELADO -->
+          <span *ngIf="turno.estado === 'CANCELADO'" class="text-xs font-medium text-slate-400 italic">
+            Turno cancelado
+          </span>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: GENERAR OFERTA MASIVA DE TURNOS -->
+  <!-- ========================================================================= -->
+  <div *ngIf="modalGenerarAbierto" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
+    <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-xl border border-slate-200 space-y-4 max-h-[90vh] overflow-y-auto">
+      
+      <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+        <div>
+          <h3 class="text-lg font-black text-slate-900">Generar Oferta de Turnos</h3>
+          <p class="text-xs text-slate-500">Crea intervalos de turnos en estado DISPONIBLE por rango de fechas.</p>
+        </div>
+        <button (click)="cerrarModalGenerar()" class="text-slate-400 hover:text-slate-600 text-lg font-bold cursor-pointer">✕</button>
+      </div>
+
+      <!-- Alerta de Error en el Modal (ej: 409 Solapamiento Horario) -->
+      <div *ngIf="genModalError" class="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium flex items-start space-x-2">
+        <span class="text-base">⚠️</span>
+        <div class="flex-1">{{ genModalError }}</div>
+      </div>
+
+      <!-- Formulario Modal -->
+      <div class="space-y-4 text-xs">
+        
+        <!-- Rango de Fechas -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="flex flex-col space-y-1">
+            <label class="font-bold text-slate-700">Fecha Desde <span class="text-rose-500">*</span></label>
+            <input type="date" [(ngModel)]="genFechaDesde" class="h-10 px-3 rounded-lg border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-[#004a8a] focus:outline-none">
+          </div>
+          <div class="flex flex-col space-y-1">
+            <label class="font-bold text-slate-700">Fecha Hasta <span class="text-rose-500">*</span></label>
+            <input type="date" [(ngModel)]="genFechaHasta" class="h-10 px-3 rounded-lg border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-[#004a8a] focus:outline-none">
+          </div>
+        </div>
+
+        <!-- Días de la semana -->
+        <div class="space-y-1.5">
+          <label class="font-bold text-slate-700">Días de Atención Semanales <span class="text-rose-500">*</span></label>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <label *ngFor="let dia of diasSemana" class="flex items-center space-x-2 p-2 rounded-lg border border-slate-200 bg-slate-50 cursor-pointer hover:bg-slate-100">
+              <input type="checkbox" [(ngModel)]="dia.selected" class="rounded text-[#004a8a] focus:ring-[#004a8a]">
+              <span class="font-medium text-slate-700">{{ dia.label }}</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Franja Horaria -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="flex flex-col space-y-1">
+            <label class="font-bold text-slate-700">Hora Inicio (HH:mm) <span class="text-rose-500">*</span></label>
+            <input type="time" [(ngModel)]="genHoraInicio" class="h-10 px-3 rounded-lg border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-[#004a8a] focus:outline-none">
+          </div>
+          <div class="flex flex-col space-y-1">
+            <label class="font-bold text-slate-700">Hora Fin (HH:mm) <span class="text-rose-500">*</span></label>
+            <input type="time" [(ngModel)]="genHoraFin" class="h-10 px-3 rounded-lg border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-[#004a8a] focus:outline-none">
+          </div>
+        </div>
+
+        <!-- Duración y Sede -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="flex flex-col space-y-1">
+            <label class="font-bold text-slate-700">Duración del Turno <span class="text-rose-500">*</span></label>
+            <select [(ngModel)]="genDuracionMinutos" class="h-10 px-3 rounded-lg border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-[#004a8a] focus:outline-none">
+              <option [ngValue]="15">15 minutos</option>
+              <option [ngValue]="20">20 minutos</option>
+              <option [ngValue]="30">30 minutos (Recomendado)</option>
+              <option [ngValue]="45">45 minutos</option>
+              <option [ngValue]="60">60 minutos (1 hora)</option>
+            </select>
+          </div>
+
+          <div class="flex flex-col space-y-1">
+            <label class="font-bold text-slate-700">Sede Hospitalaria <span class="text-rose-500">*</span></label>
+            <select [(ngModel)]="genSedeId" class="h-10 px-3 rounded-lg border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-[#004a8a] focus:outline-none">
+              <option *ngFor="let s of sedes" [ngValue]="s.id">{{ s.nombre }}</option>
+            </select>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer Modal -->
+      <div class="pt-4 border-t border-slate-200 flex items-center justify-end space-x-3">
+        <button 
+          (click)="cerrarModalGenerar()" 
+          [disabled]="cargandoGeneracion"
+          class="px-4 py-2.5 rounded-lg border border-slate-300 text-slate-700 font-bold text-xs hover:bg-slate-50 transition-colors cursor-pointer">
+          Cancelar
+        </button>
+        <button 
+          (click)="generarSlots()" 
+          [disabled]="cargandoGeneracion"
+          class="px-5 py-2.5 rounded-lg bg-[#004a8a] hover:bg-[#00386b] text-white font-bold text-xs shadow-sm transition-colors cursor-pointer disabled:opacity-50 flex items-center space-x-2">
+          <span *ngIf="cargandoGeneracion" class="inline-block animate-spin rounded-full h-3.5 w-3.5 border-2 border-white border-t-transparent"></span>
+          <span>{{ cargandoGeneracion ? 'Generando slots...' : 'Confirmar y Generar' }}</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</div>
