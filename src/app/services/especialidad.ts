@@ -15,8 +15,12 @@ export class EspecialidadService {
   private http = inject(HttpClient);
   private apiUrl = 'http://localhost:8080/api/v1/especialidades';
 
-  getEspecialidades(): Observable<Especialidad[]> {
-    return this.http.get<Especialidad[]>(this.apiUrl).pipe(
+  getEspecialidades(profesionalId?: number | null): Observable<Especialidad[]> {
+    let url = this.apiUrl;
+    if (profesionalId) {
+      url += `?profesionalId=${profesionalId}`;
+    }
+    return this.http.get<Especialidad[]>(url).pipe(
       catchError((err) => {
         console.error('Error al obtener especialidades:', err);
         return of([]);

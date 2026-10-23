@@ -94,6 +94,18 @@ describe('AgendaComponent', () => {
     expect(component.nombreMedicoFijo).toBe('Dr. López');
   });
 
+  it('debe filtrar y autoseleccionar la especialidad del médico al cargar catálogos', () => {
+    component.esMedico = true;
+    component.profesionalSeleccionado = 1;
+    especialidadServiceSpy.getEspecialidades.mockReturnValue(of([{ id: 1, nombre: 'Cardiología' }]));
+
+    component.cargarCatalogos();
+
+    expect(especialidadServiceSpy.getEspecialidades).toHaveBeenCalledWith(1);
+    expect(component.especialidades.length).toBe(1);
+    expect(component.especialidadSeleccionada).toBe(1);
+  });
+
   it('debe exigir especialidad antes de abrir modal de generación de turnos', () => {
     component.especialidadSeleccionada = null;
     component.abrirModalGenerar();

@@ -85,9 +85,15 @@ export class AgendaComponent implements OnInit {
   }
 
   cargarCatalogos(): void {
-    this.especialidadService.getEspecialidades().subscribe({
+    const profId = this.esMedico ? this.profesionalSeleccionado : null;
+    this.especialidadService.getEspecialidades(profId).subscribe({
       next: (data) => {
         this.especialidades = data || [];
+        // Si el usuario es médico y posee especialidades, autoseleccionamos su especialidad
+        if (this.esMedico && this.especialidades.length > 0 && !this.especialidadSeleccionada) {
+          this.especialidadSeleccionada = this.especialidades[0].id;
+          this.cargarAgenda();
+        }
         this.cdr.detectChanges();
       },
       error: (err) => console.error('Error al cargar especialidades', err)
