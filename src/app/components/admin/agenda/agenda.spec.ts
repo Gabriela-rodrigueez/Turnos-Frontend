@@ -106,12 +106,14 @@ describe('AgendaComponent', () => {
     expect(component.especialidadSeleccionada).toBe(1);
   });
 
-  it('debe exigir especialidad antes de abrir modal de generación de turnos', () => {
+  it('debe permitir abrir modal de generación de turnos sin especialidad previa seleccionada', () => {
     component.especialidadSeleccionada = null;
+    component.especialidades = [{ id: 1, nombre: 'Cardiología' }];
     component.abrirModalGenerar();
 
-    expect(component.modalGenerarAbierto).toBe(false);
-    expect(component.mensajeError).toContain('especialidad');
+    expect(component.modalGenerarAbierto).toBe(true);
+    expect(component.genEspecialidadId).toBe(1);
+    expect(component.mensajeError).toBe('');
   });
 
   it('debe abrir modal si la especialidad está seleccionada', () => {

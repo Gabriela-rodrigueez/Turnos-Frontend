@@ -17,25 +17,27 @@ Su misión fundamental es garantizar que todas las vistas pertenezcan de manera 
 
 ## 📐 3. Estandarización de Layout y Contenedores
 
-### 3.1 Ancho de Pantalla Unificado (`max-w-6xl`)
-Para evitar que la interfaz "salte" o cambie de tamaño al navegar entre páginas, **todas las vistas de la aplicación deben utilizar exactamente la misma estructura de contenedores**:
-- **Fondo Base Global**:
+### 3.1 Arquitectura de Layout Unificado: Sidenav Lateral y Contenedor Principal
+Para garantizar una experiencia predecible, moderna y sin fricciones, **todas las vistas de la aplicación con sesión/portal comparten la misma estructura de layout**:
+- **Estructura Base Global**:
   ```html
-  <div class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col antialiased">
-  ```
-- **Contenedor del Header**:
-  ```html
-  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-      ...
+  <div class="min-h-screen bg-slate-50 text-slate-800 font-sans flex antialiased">
+    <!-- Sidenav Lateral Izquierdo Fijo (w-64) -->
+    <app-sidebar></app-sidebar>
+
+    <!-- Contenedor Derecho (Header de contexto + Contenido Dinámico) -->
+    <div class="flex-1 lg:ml-64 flex flex-col min-w-0 min-h-screen">
+      <!-- Header Superior Delgado de Estado (h-16) -->
+      <header class="bg-white border-b border-slate-200 sticky top-0 z-20 shadow-xs h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8">
+        ...
+      </header>
+
+      <!-- Contenedor Principal de la Vista (max-w-6xl estandarizado) -->
+      <main class="flex-grow w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        <router-outlet></router-outlet>
+      </main>
     </div>
-  </header>
-  ```
-- **Contenedor Principal (`main`)**:
-  ```html
-  <main class="flex-grow w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-    ...
-  </main>
+  </div>
   ```
 - **Grillas de Tarjetas de Contenido**:
   ```html
@@ -76,11 +78,20 @@ Todas las vistas deben emplear la misma convención de colores para estados:
 
 ## 🪟 5. Componentes Estandarizados
 
-### 5.1 Barra de Navegación Superior (Navbar)
-- Debe contener la identidad oficial (`SaludMza`), el badge contextual (`Oficial`, `Portal Profesional`, etc.) y el subtítulo del portal.
-- Botones de navegación uniformes con `routerLinkActive="!bg-[#004a8a] !text-white shadow-xs"`.
-- Los botones con permisos (`ADMINISTRADOR`, `MEDICO`) deben controlarse mediante `authService.hasRole()`.
-- Ficha de usuario con nombre, badge de rol en mayúsculas, avatar con iniciales y botón accesible para cerrar sesión.
+### 5.1 Barra de Navegación Lateral (Sidenav / Sidebar) y Header de Estado
+- **Identidad Visual**: Cabecera del sidebar con marca oficial `SaludMza` (Gobierno de Mendoza - Salud), subtítulo y badge contextual.
+- **Estructura Lógica Organizada por Rol (Information Architecture)**:
+  - **Rol Paciente (`PACIENTE`)**:
+    - Grupo *Atención Médica*: Solicitar Turno (`/buscar`), Mis Turnos (`/mis-turnos`).
+    - Grupo *Mi Salud*: Historia Clínica (`/mi-historial`).
+  - **Rol Administrativo (`ADMINISTRADOR`)**:
+    - Grupo *Mesa de Entrada & Turnos*: Consultar Turnos (`/admin/panel-principal` / `/admin`), Solicitar Turno Presencial (`/admin/nueva-cita`), Gestionar Agenda Médica (`/agenda`).
+    - Grupo *Catálogos Maestros*: Profesionales / Médicos (`/admin/profesionales`), Especialidades (`/admin/especialidades`), Obras Sociales (`/admin/obras-sociales`).
+  - **Rol Médico (`MEDICO`)**:
+    - Grupo *Mi Consultorio & Atención*: Gestionar Agenda Médica (`/agenda`), Consultar Historial Clínico (`/mi-historial`).
+- **Estados Activos**: Enlaces con `routerLinkActive="!bg-[#004a8a] !text-white font-bold shadow-xs"`.
+- **Ficha de Usuario Inferior**: Pie del sidebar con nombre completo del usuario, badge de rol en mayúsculas, avatar con iniciales y botón accesible para cerrar sesión.
+- **Header Superior Delgado (Top Bar de Contexto)**: Muestra el selector de sede o área hospitalaria, reloj en tiempo real con formato argentino (`HH:mm hs`), campana de notificaciones y botón de menú tipo hamburguesa para dispositivos móviles/tablets.
 
 ### 5.2 Modales y Diálogos Flotantes
 Todo modal debe cumplir obligatoriamente con el patrón institucional:

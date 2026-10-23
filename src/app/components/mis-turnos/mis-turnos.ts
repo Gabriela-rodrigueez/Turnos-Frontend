@@ -19,7 +19,7 @@ export interface TurnoPaciente {
 @Component({
   selector: 'app-mis-turnos',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, RouterLinkActive],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './mis-turnos.html',
   styleUrls: ['./mis-turnos.css']
 })
