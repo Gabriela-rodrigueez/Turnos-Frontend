@@ -10,7 +10,8 @@ describe('AuthGuard', () => {
 
   beforeEach(() => {
     authServiceSpy = {
-      isAuthenticated: vi.fn()
+      isAuthenticated: vi.fn(),
+      hasRole: vi.fn().mockReturnValue(false)
     };
 
     routerSpy = {
@@ -25,13 +26,24 @@ describe('AuthGuard', () => {
     });
   });
 
-  it('debe permitir acceso si el usuario está autenticado', () => {
+  it('debe permitir acceso si el usuario está autenticado y no es MEDICO', () => {
     authServiceSpy.isAuthenticated.mockReturnValue(true);
+    authServiceSpy.hasRole.mockReturnValue(false);
 
     const resultado = TestBed.runInInjectionContext(() => AuthGuard({} as any, {} as any));
 
     expect(resultado).toBe(true);
     expect(routerSpy.navigate).not.toHaveBeenCalled();
+  });
+
+  it('debe denegar acceso y redirigir a /agenda si el usuario tiene rol MEDICO', () => {
+    authServiceSpy.isAuthenticated.mockReturnValue(true);
+    authServiceSpy.hasRole.mockReturnValue(true);
+
+    const resultado = TestBed.runInInjectionContext(() => AuthGuard({} as any, {} as any));
+
+    expect(resultado).toBe(false);
+    expect(routerSpy.navigate).toHaveBeenCalledWith(['/agenda']);
   });
 
   it('debe denegar acceso y redirigir a /login-paciente si el usuario no está autenticado', () => {

@@ -8,7 +8,9 @@ export interface Sede { id: number; nombre: string; }
 
 export interface Turno {
   id: number;
-  fechaHora: string;
+  fechaHora?: string;
+  fechaHoraInicio?: string;
+  fechaHoraFin?: string;
   profesionalId?: number;
   sedeId?: number;
   estado?: 'DISPONIBLE' | 'RESERVADO';

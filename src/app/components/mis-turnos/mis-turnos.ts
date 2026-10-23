@@ -44,6 +44,11 @@ export class MisTurnosComponent implements OnInit {
       return;
     }
 
+    if (this.authService.hasRole(['MEDICO'])) {
+      this.router.navigate(['/agenda']);
+      return;
+    }
+
     const dynamicPacienteId = this.authService.getPacienteId();
     if (dynamicPacienteId) {
       this.pacienteId = dynamicPacienteId;
@@ -86,10 +91,12 @@ export class MisTurnosComponent implements OnInit {
   private mapearTurno(raw: any): TurnoPaciente {
     let fecha = raw.fecha || '';
     let hora = raw.hora || '';
+    let horaFin = '';
 
-    // Si viene fechaHora en formato ISO (ej: 2026-10-05T11:30:00 o 2026-10-05 11:30:00)
-    if (raw.fechaHora) {
-      const fechaHoraStr = raw.fechaHora.toString().replace(' ', 'T');
+    // Si viene fechaHoraInicio o fechaHora
+    const fechaHoraVal = raw.fechaHoraInicio || raw.fechaHora;
+    if (fechaHoraVal) {
+      const fechaHoraStr = fechaHoraVal.toString().replace(' ', 'T');
       const partes = fechaHoraStr.split('T');
       if (partes.length >= 1 && partes[0]) {
         const dateParts = partes[0].split('-');
@@ -104,10 +111,20 @@ export class MisTurnosComponent implements OnInit {
       }
     }
 
+    if (raw.fechaHoraFin) {
+      const fechaFinStr = raw.fechaHoraFin.toString().replace(' ', 'T');
+      const partesFin = fechaFinStr.split('T');
+      if (partesFin.length >= 2 && partesFin[1]) {
+        horaFin = partesFin[1].substring(0, 5);
+      }
+    }
+
+    const horarioCompleto = horaFin ? `${hora} - ${horaFin}` : hora;
+
     return {
       id: raw.id,
       fecha: fecha || 'A confirmar',
-      hora: hora || '--:--',
+      hora: horarioCompleto || '--:--',
       profesionalNombre: raw.profesionalNombreCompleto || raw.profesionalNombre || 'Profesional no especificado',
       especialidad: raw.especialidadNombre || raw.especialidad || 'Especialidad general',
       sede: raw.sedeNombre || raw.sede || 'Sede no especificada',

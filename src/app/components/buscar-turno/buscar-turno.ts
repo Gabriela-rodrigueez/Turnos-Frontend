@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
@@ -11,6 +11,8 @@ import { AuthService } from '../../services/auth';
 export interface Turno {
   id: number;
   fechaHora?: string;
+  fechaHoraInicio?: string;
+  fechaHoraFin?: string;
   fecha?: string;
   hora?: string;
   profesionalId?: number;
@@ -18,8 +20,11 @@ export interface Turno {
   profesionalNombreCompleto?: string;
   sedeId?: number;
   sedeNombre?: string;
+  sede?: any;
   especialidadId?: number;
   especialidadNombre?: string;
+  especialidad?: any;
+  motivoConsulta?: string;
   estado?: 'DISPONIBLE' | 'RESERVADO';
   [key: string]: any;
 }
@@ -56,11 +61,17 @@ export class BuscarTurnoComponent implements OnInit {
   isLoading = false;
   isCatalogLoading = false;
   busquedaRealizada = false;
+  turnoSeleccionado: Turno | null = null;
+  motivoConsulta = '';
   turnoConfirmado: Turno | null = null;
   mensajeError: string | null = null;
   mensajeExito: string | null = null;
 
   ngOnInit(): void {
+    if (this.authService.hasRole(['MEDICO'])) {
+      this.router.navigate(['/agenda']);
+      return;
+    }
     this.cargarCatalogos();
   }
 
@@ -102,10 +113,13 @@ export class BuscarTurnoComponent implements OnInit {
     this.cargarProfesionales();
   }
 
-  // 1. Llamada real para consultar disponibilidad
+  // 1. Llamada real para consultar disponibilidad (Especialidad obligatoria)
   buscar(): void {
     if (!this.espSeleccionada) {
-      alert('Seleccione una especialidad obligatoria');
+      this.mensajeError = 'Por favor, seleccione una especialidad médica obligatoria para realizar la búsqueda.';
+      this.busquedaRealizada = false;
+      this.turnosDisponibles = [];
+      this.cdr.detectChanges();
       return;
     }
 
@@ -145,34 +159,62 @@ export class BuscarTurnoComponent implements OnInit {
     });
   }
 
-  // 2. Llamada real para confirmar y reservar el turno
+  seleccionarTurno(turno: Turno): void {
+    this.turnoSeleccionado = turno;
+    this.motivoConsulta = '';
+    this.mensajeError = null;
+    this.cdr.detectChanges();
+  }
+
+  cancelarSeleccion(): void {
+    this.turnoSeleccionado = null;
+    this.motivoConsulta = '';
+    this.mensajeError = null;
+    this.cdr.detectChanges();
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapePress(): void {
+    if (this.turnoSeleccionado && !this.isLoading) {
+      this.cancelarSeleccion();
+    }
+  }
+
+  // 2. Llamada real para confirmar y reservar el turno sobre slot preexistente
   confirmar(turno: any): void {
+    if (!this.authService.isAuthenticated()) {
+      this.router.navigate(['/login-paciente']);
+      return;
+    }
+
     this.isLoading = true;
     this.mensajeError = null;
     this.mensajeExito = null;
     this.cdr.detectChanges();
 
-    console.log('Turno presionado:', turno);
+    console.log('Turno presionado para reserva en firme:', turno);
 
-    const fechaBase = (turno.fechaHora || turno.fecha_hora || '2026-10-05T16:00:00').toString();
-    const fechaHoraValida = fechaBase.includes('T') ? fechaBase.split('T')[0] + 'T16:00:00' : '2026-10-05T16:00:00';
+    const fechaSlot = turno.fechaHoraInicio || turno.fechaHora || turno.fecha_hora;
+    const motivo = this.motivoConsulta?.trim() || null;
 
     const body = {
+      turnoId: turno.id,
       pacienteId: this.authService.getPacienteId() || 1,
       profesionalId: Number(turno.profesionalId || turno.profesional_id || 1),
       especialidadId: Number(turno.especialidadId || turno.especialidad_id || this.espSeleccionada || 1),
       sedeId: Number(turno.sedeId || turno.sede_id || 1),
-      fechaHora: fechaHoraValida,
-      motivoConsulta: 'Consulta médica general'
+      fechaHora: fechaSlot,
+      motivoConsulta: motivo
     };
 
-    console.log('Enviando payload de reserva:', JSON.stringify(body));
+    console.log('Enviando payload de reserva con slot DISPONIBLE:', JSON.stringify(body));
 
     this.http.post<any>(`${this.apiUrl}/reserva`, body).subscribe({
       next: (respuesta) => {
         console.log('Reserva confirmada con éxito:', respuesta);
         this.isLoading = false;
-        this.turnoConfirmado = { ...turno, fechaHora: fechaHoraValida };
+        this.turnoConfirmado = { ...turno, ...respuesta, fechaHora: fechaSlot, motivoConsulta: motivo || respuesta?.motivoConsulta };
+        this.turnoSeleccionado = null;
         this.mensajeExito = '¡Turno reservado exitosamente!';
         turno.estado = 'RESERVADO';
         this.cdr.detectChanges();
@@ -181,9 +223,14 @@ export class BuscarTurnoComponent implements OnInit {
         console.error('Error del backend al reservar:', err);
         this.isLoading = false;
         if (err.status === 409 || err.status === 400) {
+          let detalleValidacion = '';
+          if (err.error?.detalles && typeof err.error.detalles === 'object') {
+            detalleValidacion = Object.values(err.error.detalles).join('. ');
+          }
           this.mensajeError =
+            detalleValidacion ||
             err.error?.message ||
-            'El turno seleccionado ya fue reservado o posee un conflicto de horario.';
+            'El turno seleccionado ya no se encuentra disponible o ha expirado.';
         } else {
           this.mensajeError =
             'No se pudo completar la reserva. Verifique la conexión con el servidor.';
@@ -193,8 +240,61 @@ export class BuscarTurnoComponent implements OnInit {
     });
   }
 
+  get fechaConfirmadaFormateada(): string {
+    if (!this.turnoConfirmado) return '';
+    const fechaRaw = this.turnoConfirmado.fechaHoraInicio || this.turnoConfirmado.fechaHora || this.turnoConfirmado.fecha;
+    if (!fechaRaw) return '';
+    try {
+      const fechaLimpia = fechaRaw.toString().trim().replace(' ', 'T');
+      const partes = fechaLimpia.split('T')[0].split('-');
+      if (partes.length === 3) {
+        const anio = parseInt(partes[0], 10);
+        const mes = parseInt(partes[1], 10) - 1;
+        const dia = parseInt(partes[2], 10);
+        const d = new Date(anio, mes, dia);
+        const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+        const diasSemana = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+        const diaPad = String(dia).padStart(2, '0');
+        const mesPad = String(mes + 1).padStart(2, '0');
+        return `${diasSemana[d.getDay()]} ${diaPad} de ${meses[mes]} de ${anio} (${diaPad}/${mesPad}/${anio})`;
+      }
+      return fechaRaw;
+    } catch {
+      return fechaRaw;
+    }
+  }
+
+  get horaConfirmadaFormateada(): string {
+    if (!this.turnoConfirmado) return '';
+    const extraerHora = (str?: string): string => {
+      if (!str) return '';
+      const s = str.toString().trim().replace(' ', 'T');
+      if (s.includes('T')) {
+        const h = s.split('T')[1];
+        return h.length >= 5 ? h.substring(0, 5) : h;
+      }
+      if (s.includes(':')) {
+        return s.length >= 5 ? s.substring(0, 5) : s;
+      }
+      return s;
+    };
+
+    const horaIni = extraerHora(this.turnoConfirmado.fechaHoraInicio || this.turnoConfirmado.fechaHora || this.turnoConfirmado.hora);
+    const horaFin = extraerHora(this.turnoConfirmado.fechaHoraFin);
+
+    if (horaIni && horaFin && horaIni !== horaFin) {
+      return `${horaIni} - ${horaFin} hs`;
+    }
+    if (horaIni) {
+      return `${horaIni} hs`;
+    }
+    return '';
+  }
+
   reiniciarBusqueda(): void {
     this.turnoConfirmado = null;
+    this.turnoSeleccionado = null;
+    this.motivoConsulta = '';
     this.busquedaRealizada = false;
     this.mensajeError = null;
     this.mensajeExito = null;

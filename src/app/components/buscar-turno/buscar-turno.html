@@ -1,7 +1,7 @@
-<div class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col antialiased">
+<div class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col antialiased">
 
   <!-- Header Oficial SaludMza -->
-  <header class="bg-white border-b border-gray-200 sticky top-0 z-30 shadow-sm">
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
       <a routerLink="/buscar" class="flex items-center space-x-3 cursor-pointer group">
         <div class="w-11 h-11 rounded-xl bg-[#004a8a]/10 flex items-center justify-center text-[#004a8a] group-hover:bg-[#004a8a]/20 transition-colors">
@@ -10,9 +10,9 @@
         <div>
           <div class="flex items-center space-x-2">
             <h1 class="text-2xl font-bold tracking-tight text-[#004a8a]">SaludMza</h1>
-            <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">Oficial</span>
+            <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">Oficial</span>
           </div>
-          <p class="text-xs sm:text-sm text-gray-500 font-medium">Gestión de Turnos Provinciales</p>
+          <p class="text-xs sm:text-sm text-slate-500 font-medium">Gestión de Turnos Provinciales</p>
         </div>
       </a>
 
@@ -27,12 +27,17 @@
           <span>📋 Mis Turnos</span>
         </a>
 
+        <!-- Botón Gestión de Agenda (Para Administradores) -->
+        <a *ngIf="authService.hasRole(['ADMINISTRADOR', 'ADMIN'])" routerLink="/agenda" routerLinkActive="!bg-[#004a8a] !text-white shadow-xs" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-[#004a8a] bg-blue-50 hover:bg-[#004a8a] hover:text-white border border-blue-100 flex items-center space-x-1 cursor-pointer transition-colors shadow-xs">
+          <span>📅 Gestión de Agenda</span>
+        </a>
+
         <!-- Datos del Usuario -->
-        <div class="hidden sm:block text-right ml-1 pl-3 border-l border-gray-200">
-          <div class="text-xs font-semibold text-gray-900 leading-tight">
+        <div class="hidden sm:block text-right ml-1 pl-3 border-l border-slate-200">
+          <div class="text-xs font-semibold text-slate-900 leading-tight">
             {{ authService.currentUser()?.nombreCompleto || 'Usuario Ciudadano' }}
           </div>
-          <div class="text-[10px] text-gray-500 font-mono mt-0.5">
+          <div class="text-[10px] text-slate-500 font-mono mt-0.5">
             Rol: <span class="font-bold uppercase text-[#004a8a]">{{ authService.getRol() || 'PÚBLICO' }}</span>
           </div>
         </div>
@@ -42,18 +47,18 @@
         </div>
 
         <!-- Botón Cerrar Sesión -->
-        <button (click)="cerrarSesion()" title="Cerrar sesión" class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer ml-1">
+        <button (click)="cerrarSesion()" title="Cerrar sesión" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer ml-1">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
         </button>
       </div>
     </div>
   </header>
 
-  <!-- Main -->
-  <main class="flex-grow w-full max-w-4xl mx-auto px-4 sm:px-6 py-8">
-    <div class="mb-6">
-      <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">Turnos Médicos</h2>
-      <p class="text-sm text-gray-600 mt-1">Seleccioná la especialidad médica para consultar los días y horarios con disponibilidad.</p>
+  <!-- Main Unificado (Ancho max-w-6xl estandarizado) -->
+  <main class="flex-grow w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <div>
+      <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Turnos Médicos</h2>
+      <p class="text-sm text-slate-600 mt-1">Seleccioná la especialidad médica para consultar los días y horarios con disponibilidad.</p>
     </div>
 
     <!-- Alertas de Error / Conflicto de Horario -->
@@ -123,33 +128,187 @@
 
     <!-- Caso: Resultados Disponibles -->
     <div *ngIf="!isLoading && busquedaRealizada && turnosDisponibles.length > 0 && !turnoConfirmado" class="mt-6">
-      <h3 class="text-lg font-bold text-gray-900 mb-4">Horarios Disponibles:</h3>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div *ngFor="let turno of turnosDisponibles" class="bg-white border border-gray-200 p-5 rounded-xl shadow-sm flex justify-between items-center">
+      <h3 class="text-lg font-bold text-slate-900 mb-4">Horarios Disponibles:</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div *ngFor="let turno of turnosDisponibles" class="bg-white border border-gray-200 p-5 rounded-xl shadow-xs hover:shadow-md hover:border-blue-200 transition-all flex justify-between items-center">
           <div>
-            <p class="font-bold text-gray-900">{{ turno.fechaHora ? (turno.fechaHora | date:'dd/MM/yyyy - HH:mm') + ' hs' : (turno.fecha + ' - ' + turno.hora + ' hs') }}</p>
+            <p class="font-bold text-gray-900 text-base">
+              {{ turno.fechaHoraInicio ? (turno.fechaHoraInicio | date:'dd/MM/yyyy • HH:mm') : (turno.fechaHora ? (turno.fechaHora | date:'dd/MM/yyyy • HH:mm') : turno.fecha) }}
+              {{ turno.fechaHoraFin ? (' - ' + (turno.fechaHoraFin | date:'HH:mm') + ' hs') : (' • ' + turno.hora + ' hs') }}
+            </p>
             <p class="text-xs text-gray-500 mt-1">
               <span class="font-medium text-gray-800">{{ turno.profesionalNombreCompleto ? 'Dr/a. ' + turno.profesionalNombreCompleto : (turno.profesionalNombre || 'Sin profesional asignado') }}</span>
               <span *ngIf="turno.sedeNombre"> • {{ turno.sedeNombre }}</span>
               <span *ngIf="!turno.sedeNombre"> • Presencial</span>
             </p>
           </div>
-          <button (click)="confirmar(turno)" [disabled]="isLoading" class="bg-blue-50 text-[#004a8a] font-bold px-5 py-2.5 rounded-lg hover:bg-[#004a8a] hover:text-white transition-colors disabled:opacity-50">
+          <button (click)="seleccionarTurno(turno)" [disabled]="isLoading" class="bg-blue-50 text-[#004a8a] font-bold px-5 py-2.5 rounded-lg hover:bg-[#004a8a] hover:text-white transition-colors disabled:opacity-50 cursor-pointer shadow-xs">
             Elegir
           </button>
         </div>
       </div>
     </div>
 
+    <!-- Modal de Confirmación de Turno (Mejores Prácticas UX/UI) -->
+    <div *ngIf="turnoSeleccionado && !turnoConfirmado" (click)="cancelarSeleccion()" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
+      <div (click)="$event.stopPropagation()" class="bg-white rounded-2xl shadow-2xl border border-slate-100 max-w-lg w-full overflow-hidden animate-scaleUp">
+        
+        <!-- Header del Modal -->
+        <div class="px-6 py-5 bg-gradient-to-r from-blue-50/70 to-slate-50 border-b border-gray-100 flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-[#004a8a]/10 text-[#004a8a] flex items-center justify-center text-lg font-bold">
+              🗓️
+            </div>
+            <div>
+              <h3 class="text-lg font-bold text-gray-900 leading-tight">Confirmar Cita Médica</h3>
+              <p class="text-xs text-gray-500 mt-0.5">Revisá los datos antes de agendar</p>
+            </div>
+          </div>
+          <button (click)="cancelarSeleccion()" title="Cerrar ventana" class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+
+        <!-- Contenido del Modal -->
+        <div class="p-6 space-y-5">
+          
+          <!-- Ficha de Resumen del Turno -->
+          <div class="bg-slate-50/80 border border-slate-200/80 rounded-xl p-4 space-y-2.5 text-xs sm:text-sm">
+            
+            <div class="flex justify-between items-center pb-2 border-b border-slate-200/60">
+              <span class="font-bold text-slate-500 uppercase text-[11px] tracking-wider">Profesional:</span>
+              <span class="font-bold text-slate-900">
+                {{ turnoSeleccionado.profesionalNombreCompleto ? 'Dr/a. ' + turnoSeleccionado.profesionalNombreCompleto : (turnoSeleccionado.profesionalNombre || 'Profesional Médico') }}
+              </span>
+            </div>
+
+            <div class="flex justify-between items-center pb-2 border-b border-slate-200/60">
+              <span class="font-bold text-slate-500 uppercase text-[11px] tracking-wider">Fecha:</span>
+              <span class="font-bold text-slate-900">
+                {{ turnoSeleccionado.fechaHoraInicio ? (turnoSeleccionado.fechaHoraInicio | date:'dd/MM/yyyy') : (turnoSeleccionado.fechaHora | date:'dd/MM/yyyy') }}
+              </span>
+            </div>
+
+            <div class="flex justify-between items-center pb-2 border-b border-slate-200/60">
+              <span class="font-bold text-slate-500 uppercase text-[11px] tracking-wider">Horario:</span>
+              <span class="font-black text-[#004a8a] text-sm">
+                {{ turnoSeleccionado.fechaHoraInicio ? (turnoSeleccionado.fechaHoraInicio | date:'HH:mm') : turnoSeleccionado.hora }}
+                {{ turnoSeleccionado.fechaHoraFin ? (' - ' + (turnoSeleccionado.fechaHoraFin | date:'HH:mm') + ' hs') : ' hs' }}
+              </span>
+            </div>
+
+            <div *ngIf="turnoSeleccionado.sedeNombre" class="flex justify-between items-center">
+              <span class="font-bold text-slate-500 uppercase text-[11px] tracking-wider">Sede:</span>
+              <span class="font-medium text-slate-700">
+                🏥 {{ turnoSeleccionado.sedeNombre }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Input Opcional: Motivo de la Consulta -->
+          <div>
+            <div class="flex justify-between items-center mb-1.5">
+              <label for="motivoConsulta" class="text-xs font-bold text-gray-700 uppercase tracking-wide">
+                Motivo de la consulta <span class="text-gray-400 font-normal lowercase">(opcional)</span>
+              </label>
+              <span class="text-[11px] text-gray-400">{{ motivoConsulta.length }}/200</span>
+            </div>
+            <textarea
+              id="motivoConsulta"
+              rows="3"
+              maxlength="200"
+              [(ngModel)]="motivoConsulta"
+              placeholder="Contanos brevemente el motivo de tu consulta (ej: chequeo anual, dolor lumbar, control de medicación...)"
+              class="w-full p-3 rounded-xl border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-[#004a8a] focus:border-[#004a8a] focus:outline-none transition-shadow resize-none"
+            ></textarea>
+            <p class="text-[11px] text-gray-500 mt-1">Podés dejar este campo vacío si preferís comentarlo directamente con el profesional en la consulta.</p>
+          </div>
+
+        </div>
+
+        <!-- Footer / Acciones del Modal -->
+        <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
+          <button (click)="cancelarSeleccion()" [disabled]="isLoading" class="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-gray-300 hover:bg-white text-gray-700 font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer">
+            Cancelar
+          </button>
+          <button (click)="confirmar(turnoSeleccionado)" [disabled]="isLoading" class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-[#004a8a] hover:bg-[#00386b] text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-xs disabled:opacity-50 cursor-pointer flex items-center justify-center space-x-2">
+            <span *ngIf="isLoading" class="inline-block animate-spin rounded-full h-3.5 w-3.5 border-2 border-white border-t-transparent"></span>
+            <span>{{ isLoading ? 'Confirmando...' : 'Confirmar Turno' }}</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
     <!-- Caso: Confirmado Exitosamente -->
-    <div *ngIf="turnoConfirmado" class="mt-6 bg-white p-8 rounded-xl shadow-sm border border-emerald-200 text-center">
-      <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3 text-xl font-bold">✓</div>
+    <div *ngIf="turnoConfirmado" class="mt-6 bg-white p-8 rounded-2xl shadow-sm border border-emerald-200 text-center max-w-xl mx-auto animate-fadeIn">
+      <div class="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3 text-2xl font-bold shadow-xs">
+        ✓
+      </div>
       <h2 class="text-2xl font-bold text-gray-900 mb-1">¡Reserva Exitosa!</h2>
-      <p class="text-sm text-gray-500 mb-4">El turno quedó confirmado en el sistema.</p>
-      <p class="font-bold text-[#004a8a] text-lg mb-6">{{ turnoConfirmado.fechaHora || (turnoConfirmado.fecha + ' - ' + turnoConfirmado.hora + ' hs') }}</p>
-      <button (click)="reiniciarBusqueda()" class="px-6 border-2 border-[#004a8a] text-[#004a8a] font-bold py-2.5 rounded-lg hover:bg-blue-50 transition-colors">
-        Realizar otra búsqueda
-      </button>
+      <p class="text-xs sm:text-sm text-gray-500 mb-5">El turno médico quedó confirmado en el sistema provincial.</p>
+
+      <!-- Ficha del Turno Confirmado (Formato Argentina) -->
+      <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 text-left space-y-3 mb-6 text-xs sm:text-sm">
+        
+        <!-- Fecha -->
+        <div class="flex items-start justify-between border-b border-slate-200/80 pb-2.5">
+          <span class="font-bold text-slate-500 uppercase text-xs tracking-wider">Fecha:</span>
+          <span class="font-bold text-slate-900 text-right">
+            {{ fechaConfirmadaFormateada }}
+          </span>
+        </div>
+
+        <!-- Horario -->
+        <div class="flex items-center justify-between border-b border-slate-200/80 pb-2.5">
+          <span class="font-bold text-slate-500 uppercase text-xs tracking-wider">Horario:</span>
+          <span class="font-black text-[#004a8a] text-base">
+            {{ horaConfirmadaFormateada }}
+          </span>
+        </div>
+
+        <!-- Especialidad -->
+        <div *ngIf="turnoConfirmado.especialidadNombre || turnoConfirmado.especialidad" class="flex items-center justify-between border-b border-slate-200/80 pb-2.5">
+          <span class="font-bold text-slate-500 uppercase text-xs tracking-wider">Especialidad:</span>
+          <span class="font-bold text-sky-800 bg-sky-50 px-2.5 py-0.5 rounded border border-sky-200 text-xs">
+            {{ turnoConfirmado.especialidadNombre || turnoConfirmado.especialidad }}
+          </span>
+        </div>
+
+        <!-- Profesional -->
+        <div *ngIf="turnoConfirmado.profesionalNombreCompleto || turnoConfirmado.profesionalNombre" class="flex items-center justify-between border-b border-slate-200/80 pb-2.5">
+          <span class="font-bold text-slate-500 uppercase text-xs tracking-wider">Profesional:</span>
+          <span class="font-bold text-slate-800">
+            {{ turnoConfirmado.profesionalNombreCompleto || turnoConfirmado.profesionalNombre }}
+          </span>
+        </div>
+
+        <!-- Sede -->
+        <div *ngIf="turnoConfirmado.sedeNombre || turnoConfirmado.sede" class="flex items-center justify-between">
+          <span class="font-bold text-slate-500 uppercase text-xs tracking-wider">Sede:</span>
+          <span class="font-medium text-slate-700">
+            🏥 {{ turnoConfirmado.sedeNombre || turnoConfirmado.sede }}
+          </span>
+        </div>
+
+        <!-- Motivo de Consulta (si fue ingresado) -->
+        <div *ngIf="turnoConfirmado.motivoConsulta" class="flex items-center justify-between border-t border-slate-200/80 pt-2.5">
+          <span class="font-bold text-slate-500 uppercase text-xs tracking-wider">Motivo:</span>
+          <span class="font-medium text-slate-700 italic">
+            {{ turnoConfirmado.motivoConsulta }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Acciones de Navegación -->
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+        <a routerLink="/mis-turnos" class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-[#004a8a] hover:bg-[#00386b] text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-xs text-center cursor-pointer">
+          📋 Ver Mis Turnos
+        </a>
+        <button (click)="reiniciarBusqueda()" class="w-full sm:w-auto px-6 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer">
+          Realizar otra búsqueda
+        </button>
+      </div>
     </div>
   </main>
 </div>
