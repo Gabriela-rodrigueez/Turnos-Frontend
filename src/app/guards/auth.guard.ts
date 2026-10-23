@@ -12,6 +12,11 @@ export const AuthGuard: CanActivateFn = (route, state) => {
   const router = inject(Router);
 
   if (authService.isAuthenticated()) {
+    if (authService.hasRole(['MEDICO'])) {
+      console.warn('[AuthGuard] Acceso denegado a rol MEDICO en vista de turnos de paciente. Redirigiendo a /agenda');
+      router.navigate(['/agenda']);
+      return false;
+    }
     return true;
   }
 

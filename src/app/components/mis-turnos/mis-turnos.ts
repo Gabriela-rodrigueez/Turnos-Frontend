@@ -44,6 +44,11 @@ export class MisTurnosComponent implements OnInit {
       return;
     }
 
+    if (this.authService.hasRole(['MEDICO'])) {
+      this.router.navigate(['/agenda']);
+      return;
+    }
+
     const dynamicPacienteId = this.authService.getPacienteId();
     if (dynamicPacienteId) {
       this.pacienteId = dynamicPacienteId;

@@ -68,6 +68,10 @@ export class BuscarTurnoComponent implements OnInit {
   mensajeExito: string | null = null;
 
   ngOnInit(): void {
+    if (this.authService.hasRole(['MEDICO'])) {
+      this.router.navigate(['/agenda']);
+      return;
+    }
     this.cargarCatalogos();
   }
 

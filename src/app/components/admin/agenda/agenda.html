@@ -26,13 +26,13 @@
 
       <!-- Navegación del Portal -->
       <div class="flex items-center space-x-2 sm:space-x-3">
-        <!-- Botón Buscar Turnos -->
-        <a routerLink="/buscar" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-[#004a8a] bg-blue-50 hover:bg-[#004a8a] hover:text-white border border-blue-100 flex items-center space-x-1 cursor-pointer transition-colors shadow-xs">
+        <!-- Botón Buscar Turnos (Oculto para rol MEDICO) -->
+        <a *ngIf="!authService.hasRole(['MEDICO'])" routerLink="/buscar" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-[#004a8a] bg-blue-50 hover:bg-[#004a8a] hover:text-white border border-blue-100 flex items-center space-x-1 cursor-pointer transition-colors shadow-xs">
           <span>🔍 Buscar Turnos</span>
         </a>
 
-        <!-- Botón Mis Turnos -->
-        <a routerLink="/mis-turnos" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-[#004a8a] bg-blue-50 hover:bg-[#004a8a] hover:text-white border border-blue-100 flex items-center space-x-1 cursor-pointer transition-colors shadow-xs">
+        <!-- Botón Mis Turnos (Oculto para rol MEDICO) -->
+        <a *ngIf="!authService.hasRole(['MEDICO'])" routerLink="/mis-turnos" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-[#004a8a] bg-blue-50 hover:bg-[#004a8a] hover:text-white border border-blue-100 flex items-center space-x-1 cursor-pointer transition-colors shadow-xs">
           <span>📋 Mis Turnos</span>
         </a>
 
@@ -73,9 +73,8 @@
   </header>
 
   <!-- ========================================================================= -->
-  <!-- CONTENIDO PRINCIPAL -->
-  <!-- ========================================================================= -->
-  <main class="flex-grow w-full max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+  <!-- Contenido Principal Unificado (Ancho max-w-6xl estandarizado) -->
+  <main class="flex-grow w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
 
     <!-- Encabezado de la Sección con Acción Principal -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2">

@@ -13,6 +13,7 @@ import { RegistroValidacionComponent } from './components/admin/registro-validac
 import { AgendaComponent } from './components/admin/agenda/agenda';
 import { AdminGuard } from './guards/admin.guard';
 import { AuthGuard } from './guards/auth.guard';
+import { NoMedicoGuard } from './guards/no-medico.guard';
 
 export const routes: Routes = [
   // Rutas públicas del Portal Ciudadano
@@ -21,7 +22,7 @@ export const routes: Routes = [
   { path: 'login-medico', component: LoginMedicoComponent },
   { path: 'login-admin', component: LoginAdminComponent },
   { path: 'registro', component: RegistroComponent },
-  { path: 'buscar', component: BuscarTurnoComponent },
+  { path: 'buscar', component: BuscarTurnoComponent, canActivate: [NoMedicoGuard] },
   { path: 'mis-turnos', component: MisTurnosComponent, canActivate: [AuthGuard] },
 
   // Módulo de Gestión de Agenda Profesional (Vista Propia e Independiente)
