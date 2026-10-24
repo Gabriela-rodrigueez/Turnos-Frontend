@@ -1,9 +1,10 @@
 import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TurnoService } from '../../services/turno';
 import { AuthService } from '../../services/auth';
+import { HistorialClinicoService, PacienteItem } from '../../services/historial-clinico';
 
 export interface TurnoPaciente {
   id: number;
@@ -31,9 +32,19 @@ export class MisTurnosComponent implements OnInit {
   mensajeExito: string = '';
   pacienteId: number = 1;
 
+  // Estado para rol Administrador / Mesa de Entrada
+  esAdmin: boolean = false;
+  busquedaPaciente: string = '';
+  buscandoPacientes: boolean = false;
+  pacientesSugeridos: PacienteItem[] = [];
+  pacienteSeleccionado: PacienteItem | null = null;
+  haBuscadoPacientes: boolean = false;
+  errorBusqueda: string = '';
+
   public authService = inject(AuthService);
   public router = inject(Router);
   private turnoService = inject(TurnoService);
+  private historialService = inject(HistorialClinicoService);
   private cdr = inject(ChangeDetectorRef);
 
   constructor() {}
@@ -46,6 +57,15 @@ export class MisTurnosComponent implements OnInit {
 
     if (this.authService.hasRole(['MEDICO'])) {
       this.router.navigate(['/agenda']);
+      return;
+    }
+
+    this.esAdmin = this.authService.hasRole(['ADMINISTRADOR', 'ADMIN']);
+
+    if (this.esAdmin) {
+      // Si es administrador o mesa de entrada, no consultamos turnos automáticamente:
+      // se espera a que busque y seleccione un paciente primero.
+      this.turnos = [];
       return;
     }
 
@@ -160,14 +180,54 @@ export class MisTurnosComponent implements OnInit {
     });
   }
 
-  cambiarPaciente(id: number): void {
-    if (this.authService.hasRole(['PACIENTE'])) {
-      const myId = this.authService.getPacienteId();
-      this.pacienteId = myId ? myId : this.pacienteId;
-    } else {
-      this.pacienteId = id;
+  buscarPacientes(): void {
+    if (!this.busquedaPaciente || !this.busquedaPaciente.trim()) {
+      this.errorBusqueda = 'Por favor ingrese al menos un criterio de búsqueda (DNI, nombre o apellido).';
+      return;
     }
+
+    this.buscandoPacientes = true;
+    this.errorBusqueda = '';
+    this.haBuscadoPacientes = true;
+
+    this.historialService.obtenerPacientes(this.busquedaPaciente.trim()).subscribe({
+      next: (pacientes) => {
+        this.buscandoPacientes = false;
+        this.pacientesSugeridos = pacientes || [];
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.buscandoPacientes = false;
+        this.errorBusqueda = 'Error al consultar pacientes. Intente nuevamente.';
+        console.error('Error al buscar pacientes', err);
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  seleccionarPaciente(paciente: PacienteItem): void {
+    this.pacienteSeleccionado = paciente;
+    this.pacienteId = paciente.id;
+    this.pacientesSugeridos = [];
+    this.errorBusqueda = '';
     this.cargarTurnos();
+  }
+
+  cambiarPaciente(id?: number): void {
+    if (id !== undefined) {
+      this.pacienteId = id;
+      this.cargarTurnos();
+      return;
+    }
+    this.pacienteSeleccionado = null;
+    this.turnos = [];
+    this.mensajeExito = '';
+    this.errorMensaje = '';
+    this.pacientesSugeridos = [];
+    this.haBuscadoPacientes = false;
+    this.busquedaPaciente = '';
+    this.errorBusqueda = '';
+    this.cdr.detectChanges();
   }
 
   irABuscarTurno(): void {

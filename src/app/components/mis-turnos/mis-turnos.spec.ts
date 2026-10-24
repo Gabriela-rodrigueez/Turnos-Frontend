@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MisTurnosComponent } from './mis-turnos';
 import { TurnoService } from '../../services/turno';
 import { AuthService } from '../../services/auth';
+import { HistorialClinicoService, PacienteItem } from '../../services/historial-clinico';
 import { Router, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { HttpResponse } from '@angular/common/http';
@@ -11,6 +12,7 @@ describe('MisTurnosComponent', () => {
   let component: MisTurnosComponent;
   let fixture: ComponentFixture<MisTurnosComponent>;
   let turnoServiceSpy: any;
+  let historialServiceSpy: any;
   let router: Router;
   let routerSpy: any;
   let authServiceSpy: any;
@@ -32,10 +34,30 @@ describe('MisTurnosComponent', () => {
     }
   ];
 
+  const mockPacientes: PacienteItem[] = [
+    {
+      id: 1,
+      nombre: 'Juan',
+      apellido: 'González',
+      dni: '30123456',
+      obraSocialNombre: 'OSEP'
+    },
+    {
+      id: 2,
+      nombre: 'Lucía',
+      apellido: 'Martínez',
+      dni: '35111222',
+      obraSocialNombre: 'PAMI'
+    }
+  ];
+
   beforeEach(async () => {
     turnoServiceSpy = {
       obtenerTurnosPaciente: vi.fn(),
       cancelarTurno: vi.fn()
+    };
+    historialServiceSpy = {
+      obtenerPacientes: vi.fn().mockReturnValue(of(mockPacientes))
     };
     authServiceSpy = {
       getPacienteId: vi.fn().mockReturnValue(1),
@@ -51,6 +73,7 @@ describe('MisTurnosComponent', () => {
       providers: [
         provideRouter([]),
         { provide: TurnoService, useValue: turnoServiceSpy },
+        { provide: HistorialClinicoService, useValue: historialServiceSpy },
         { provide: AuthService, useValue: authServiceSpy }
       ]
     }).compileComponents();
@@ -70,12 +93,12 @@ describe('MisTurnosComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('debe cargar y mapear correctamente los turnos desde la API (200 OK)', () => {
+  it('debe cargar y mapear correctamente los turnos desde la API para Paciente (200 OK)', () => {
     turnoServiceSpy.obtenerTurnosPaciente.mockReturnValue(
       of(new HttpResponse({ status: 200, body: mockTurnosBackend }))
     );
 
-    fixture.detectChanges(); // Ejecuta ngOnInit
+    fixture.detectChanges(); // Ejecuta ngOnInit con rol PACIENTE
 
     expect(component.turnos.length).toBe(1);
     const turno = component.turnos[0];
@@ -157,5 +180,61 @@ describe('MisTurnosComponent', () => {
     component.ngOnInit();
     expect(routerSpy).toHaveBeenCalledWith(['/login-paciente']);
     expect(turnoServiceSpy.obtenerTurnosPaciente).not.toHaveBeenCalled();
+  });
+
+  describe('Comportamiento para Rol Administrador / Mesa de Entrada', () => {
+    beforeEach(() => {
+      authServiceSpy.hasRole.mockImplementation((roles: string[]) => roles.includes('ADMINISTRADOR'));
+    });
+
+    it('no debe consultar turnos al inicializarse si es Administrador', () => {
+      component.ngOnInit();
+      expect(component.esAdmin).toBe(true);
+      expect(turnoServiceSpy.obtenerTurnosPaciente).not.toHaveBeenCalled();
+      expect(component.turnos.length).toBe(0);
+      expect(component.pacienteSeleccionado).toBeNull();
+    });
+
+    it('debe validar criterio no vacío al buscar pacientes', () => {
+      component.busquedaPaciente = '   ';
+      component.buscarPacientes();
+      expect(component.errorBusqueda).toContain('ingrese al menos un criterio');
+      expect(historialServiceSpy.obtenerPacientes).not.toHaveBeenCalled();
+    });
+
+    it('debe buscar pacientes por filtro y poblar pacientesSugeridos', () => {
+      component.busquedaPaciente = 'González';
+      component.buscarPacientes();
+
+      expect(historialServiceSpy.obtenerPacientes).toHaveBeenCalledWith('González');
+      expect(component.pacientesSugeridos.length).toBe(2);
+      expect(component.buscandoPacientes).toBe(false);
+      expect(component.haBuscadoPacientes).toBe(true);
+    });
+
+    it('debe seleccionar paciente y recién ahí consultar sus turnos', () => {
+      turnoServiceSpy.obtenerTurnosPaciente.mockReturnValue(
+        of(new HttpResponse({ status: 200, body: mockTurnosBackend }))
+      );
+
+      component.seleccionarPaciente(mockPacientes[0]);
+
+      expect(component.pacienteSeleccionado).toEqual(mockPacientes[0]);
+      expect(component.pacienteId).toBe(1);
+      expect(turnoServiceSpy.obtenerTurnosPaciente).toHaveBeenCalledWith(1);
+      expect(component.turnos.length).toBe(1);
+    });
+
+    it('debe permitir cambiar de paciente limpiando la selección y los turnos', () => {
+      component.pacienteSeleccionado = mockPacientes[0];
+      component.turnos = [{ id: 1 } as any];
+
+      component.cambiarPaciente();
+
+      expect(component.pacienteSeleccionado).toBeNull();
+      expect(component.turnos.length).toBe(0);
+      expect(component.haBuscadoPacientes).toBe(false);
+      expect(component.busquedaPaciente).toBe('');
+    });
   });
 });
