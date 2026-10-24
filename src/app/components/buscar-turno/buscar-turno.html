@@ -97,46 +97,47 @@
     </div>
 
     <!-- Modal de Confirmación de Turno (Mejores Prácticas UX/UI) -->
-    <div *ngIf="turnoSeleccionado && !turnoConfirmado" (click)="cancelarSeleccion()" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
-      <div (click)="$event.stopPropagation()" class="bg-white rounded-2xl shadow-2xl border border-slate-100 max-w-lg w-full overflow-hidden animate-scaleUp">
+    <!-- Modal de Confirmación de Turno (Con Selección de Beneficiario y Scroll Ergonómico) -->
+    <div *ngIf="turnoSeleccionado && !turnoConfirmado" (click)="cancelarSeleccion()" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn overflow-y-auto">
+      <div (click)="$event.stopPropagation()" class="bg-white rounded-2xl shadow-2xl border border-slate-100 max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden animate-scaleUp my-auto">
         
         <!-- Header del Modal -->
-        <div class="px-6 py-5 bg-gradient-to-r from-blue-50/70 to-slate-50 border-b border-gray-100 flex items-center justify-between">
+        <div class="px-5 py-3.5 bg-gradient-to-r from-blue-50/70 to-slate-50 border-b border-gray-100 flex items-center justify-between shrink-0">
           <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-xl bg-[#004a8a]/10 text-[#004a8a] flex items-center justify-center text-lg font-bold">
+            <div class="w-9 h-9 rounded-xl bg-[#004a8a]/10 text-[#004a8a] flex items-center justify-center text-lg font-bold">
               🗓️
             </div>
             <div>
-              <h3 class="text-lg font-bold text-gray-900 leading-tight">Confirmar Cita Médica</h3>
+              <h3 class="text-base font-bold text-gray-900 leading-tight">Confirmar Cita Médica</h3>
               <p class="text-xs text-gray-500 mt-0.5">Revisá los datos antes de agendar</p>
             </div>
           </div>
-          <button (click)="cancelarSeleccion()" title="Cerrar ventana" class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer">
+          <button (click)="cancelarSeleccion()" title="Cerrar ventana" class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
         </div>
 
-        <!-- Contenido del Modal -->
-        <div class="p-6 space-y-5">
+        <!-- Contenido del Modal con Scrollbar Interno -->
+        <div class="p-5 space-y-4 overflow-y-auto flex-1">
           
           <!-- Ficha de Resumen del Turno -->
-          <div class="bg-slate-50/80 border border-slate-200/80 rounded-xl p-4 space-y-2.5 text-xs sm:text-sm">
+          <div class="bg-slate-50/80 border border-slate-200/80 rounded-xl p-3.5 space-y-2 text-xs sm:text-sm">
             
-            <div class="flex justify-between items-center pb-2 border-b border-slate-200/60">
+            <div class="flex justify-between items-center pb-1.5 border-b border-slate-200/60">
               <span class="font-bold text-slate-500 uppercase text-[11px] tracking-wider">Profesional:</span>
               <span class="font-bold text-slate-900">
                 {{ turnoSeleccionado.profesionalNombreCompleto ? 'Dr/a. ' + turnoSeleccionado.profesionalNombreCompleto : (turnoSeleccionado.profesionalNombre || 'Profesional Médico') }}
               </span>
             </div>
 
-            <div class="flex justify-between items-center pb-2 border-b border-slate-200/60">
+            <div class="flex justify-between items-center pb-1.5 border-b border-slate-200/60">
               <span class="font-bold text-slate-500 uppercase text-[11px] tracking-wider">Fecha:</span>
               <span class="font-bold text-slate-900">
                 {{ turnoSeleccionado.fechaHoraInicio ? (turnoSeleccionado.fechaHoraInicio | date:'dd/MM/yyyy') : (turnoSeleccionado.fechaHora | date:'dd/MM/yyyy') }}
               </span>
             </div>
 
-            <div class="flex justify-between items-center pb-2 border-b border-slate-200/60">
+            <div class="flex justify-between items-center pb-1.5 border-b border-slate-200/60">
               <span class="font-bold text-slate-500 uppercase text-[11px] tracking-wider">Horario:</span>
               <span class="font-black text-[#004a8a] text-sm">
                 {{ turnoSeleccionado.fechaHoraInicio ? (turnoSeleccionado.fechaHoraInicio | date:'HH:mm') : turnoSeleccionado.hora }}
@@ -170,7 +171,7 @@
             <div class="space-y-2">
               <!-- Opción 1: Para mí (Titular) -->
               <label 
-                class="flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all"
+                class="flex items-center justify-between p-2.5 rounded-xl border cursor-pointer transition-all"
                 [ngClass]="{
                   'bg-blue-50/70 border-[#004a8a] ring-1 ring-[#004a8a]': beneficiarioSeleccionadoId === titularId,
                   'bg-slate-50 border-slate-200 hover:border-slate-300': beneficiarioSeleccionadoId !== titularId
@@ -197,7 +198,7 @@
               <!-- Opciones dinámicas: Familiares a cargo -->
               <div *ngFor="let fam of familiares" class="space-y-2">
                 <label 
-                  class="flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all"
+                  class="flex items-center justify-between p-2.5 rounded-xl border cursor-pointer transition-all"
                   [ngClass]="{
                     'bg-blue-50/70 border-[#004a8a] ring-1 ring-[#004a8a]': beneficiarioSeleccionadoId === fam.id,
                     'bg-slate-50 border-slate-200 hover:border-slate-300': beneficiarioSeleccionadoId !== fam.id
@@ -239,7 +240,7 @@
 
           <!-- Input Opcional: Motivo de la Consulta -->
           <div>
-            <div class="flex justify-between items-center mb-1.5">
+            <div class="flex justify-between items-center mb-1">
               <label for="motivoConsulta" class="text-xs font-bold text-gray-700 uppercase tracking-wide">
                 Motivo de la consulta <span class="text-gray-400 font-normal lowercase">(opcional)</span>
               </label>
@@ -247,25 +248,25 @@
             </div>
             <textarea
               id="motivoConsulta"
-              rows="3"
+              rows="2"
               maxlength="200"
               [(ngModel)]="motivoConsulta"
               placeholder="Contanos brevemente el motivo de tu consulta (ej: chequeo anual, dolor lumbar, control de medicación...)"
-              class="w-full p-3 rounded-xl border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-[#004a8a] focus:border-[#004a8a] focus:outline-none transition-shadow resize-none"
+              class="w-full p-2.5 rounded-xl border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-[#004a8a] focus:border-[#004a8a] focus:outline-none transition-shadow resize-none"
             ></textarea>
-            <p class="text-[11px] text-gray-500 mt-1">Podés dejar este campo vacío si preferís comentarlo directamente con el profesional en la consulta.</p>
+            <p class="text-[10px] text-gray-500 mt-0.5">Podés dejar este campo vacío si preferís comentarlo directamente con el profesional en la consulta.</p>
           </div>
 
         </div>
 
-        <!-- Footer / Acciones del Modal -->
-        <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
+        <!-- Footer / Acciones del Modal (Siempre visible y anclado al pie) -->
+        <div class="px-6 py-3.5 bg-gray-50 border-t border-gray-100 flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 shrink-0">
           <button (click)="cancelarSeleccion()" [disabled]="isLoading" class="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-gray-300 hover:bg-white text-gray-700 font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer">
             Cancelar
           </button>
           <button (click)="confirmar(turnoSeleccionado)" [disabled]="isLoading" class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-[#004a8a] hover:bg-[#00386b] text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-xs disabled:opacity-50 cursor-pointer flex items-center justify-center space-x-2">
             <span *ngIf="isLoading" class="inline-block animate-spin rounded-full h-3.5 w-3.5 border-2 border-white border-t-transparent"></span>
-            <span>{{ isLoading ? 'Confirmando...' : 'Confirmar Turno' }}</span>
+            <span>{{ isLoading ? 'Solicitando...' : 'Solicitar Turno' }}</span>
           </button>
         </div>
 
