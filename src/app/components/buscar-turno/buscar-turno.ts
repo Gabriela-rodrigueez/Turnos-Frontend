@@ -1,12 +1,13 @@
 import { Component, OnInit, inject, ChangeDetectorRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { EspecialidadService, Especialidad } from '../../services/especialidad';
 import { SedeService, Sede } from '../../services/sede';
 import { ProfesionalService, Profesional } from '../../services/profesional';
 import { AuthService } from '../../services/auth';
+import { HistorialClinicoService, PacienteItem } from '../../services/historial-clinico';
 
 export interface Turno {
   id: number;
@@ -26,6 +27,8 @@ export interface Turno {
   especialidad?: any;
   motivoConsulta?: string;
   estado?: 'DISPONIBLE' | 'RESERVADO';
+  pacienteNombreCompleto?: string;
+  pacienteDni?: string;
   [key: string]: any;
 }
 
@@ -43,6 +46,7 @@ export class BuscarTurnoComponent implements OnInit {
   private especialidadService = inject(EspecialidadService);
   private sedeService = inject(SedeService);
   private profesionalService = inject(ProfesionalService);
+  private historialService = inject(HistorialClinicoService);
   public authService = inject(AuthService);
   
   private apiUrl = 'http://localhost:8080/api/v1/turnos';
@@ -67,11 +71,21 @@ export class BuscarTurnoComponent implements OnInit {
   mensajeError: string | null = null;
   mensajeExito: string | null = null;
 
+  // Estado para rol Administrador / Mesa de Entrada
+  esAdmin = false;
+  busquedaPaciente = '';
+  buscandoPacientes = false;
+  pacientesSugeridos: PacienteItem[] = [];
+  pacienteSeleccionado: PacienteItem | null = null;
+  haBuscadoPacientes = false;
+  errorBusquedaPaciente = '';
+
   ngOnInit(): void {
     if (this.authService.hasRole(['MEDICO'])) {
       this.router.navigate(['/agenda']);
       return;
     }
+    this.esAdmin = this.authService.hasRole(['ADMINISTRADOR', 'ADMIN']);
     this.cargarCatalogos();
   }
 
@@ -141,7 +155,6 @@ export class BuscarTurnoComponent implements OnInit {
 
     this.http.get<Turno[]>(`${this.apiUrl}/disponibilidad`, { params }).subscribe({
       next: (turnos) => {
-        console.log('Turnos devueltos por el backend:', turnos);
         this.turnosDisponibles = turnos || [];
         this.isLoading = false;
         this.cdr.detectChanges();
@@ -152,11 +165,54 @@ export class BuscarTurnoComponent implements OnInit {
         this.mensajeError =
           err.error?.message ||
           (err.status === 0
-            ? 'No se pudo conectar con el servidor (verificar CORS o backend).'
+            ? 'No se pudo conectar con el servidor (verificar conexión o backend).'
             : 'Ocurrió un error al consultar la disponibilidad.');
         this.cdr.detectChanges();
       }
     });
+  }
+
+  // Métodos de Búsqueda y Asignación de Pacientes (Para Administradores)
+  buscarPacientes(): void {
+    if (!this.busquedaPaciente || !this.busquedaPaciente.trim()) {
+      this.errorBusquedaPaciente = 'Por favor ingrese DNI, apellido o nombre.';
+      return;
+    }
+
+    this.buscandoPacientes = true;
+    this.errorBusquedaPaciente = '';
+    this.haBuscadoPacientes = true;
+
+    this.historialService.obtenerPacientes(this.busquedaPaciente.trim()).subscribe({
+      next: (pacientes) => {
+        this.buscandoPacientes = false;
+        this.pacientesSugeridos = pacientes || [];
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.buscandoPacientes = false;
+        this.errorBusquedaPaciente = 'No se pudo realizar la búsqueda de pacientes.';
+        console.error('Error al buscar pacientes:', err);
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  seleccionarPaciente(paciente: PacienteItem): void {
+    this.pacienteSeleccionado = paciente;
+    this.pacientesSugeridos = [];
+    this.errorBusquedaPaciente = '';
+    this.mensajeError = null;
+    this.cdr.detectChanges();
+  }
+
+  cambiarPaciente(): void {
+    this.pacienteSeleccionado = null;
+    this.pacientesSugeridos = [];
+    this.haBuscadoPacientes = false;
+    this.busquedaPaciente = '';
+    this.errorBusquedaPaciente = '';
+    this.cdr.detectChanges();
   }
 
   seleccionarTurno(turno: Turno): void {
@@ -187,19 +243,27 @@ export class BuscarTurnoComponent implements OnInit {
       return;
     }
 
+    if (this.esAdmin && !this.pacienteSeleccionado) {
+      this.mensajeError = 'Debe seleccionar un paciente para poder asignarle el turno en mesa de entrada.';
+      this.cdr.detectChanges();
+      return;
+    }
+
     this.isLoading = true;
     this.mensajeError = null;
     this.mensajeExito = null;
     this.cdr.detectChanges();
 
-    console.log('Turno presionado para reserva en firme:', turno);
-
     const fechaSlot = turno.fechaHoraInicio || turno.fechaHora || turno.fecha_hora;
     const motivo = this.motivoConsulta?.trim() || null;
 
+    const idDestino = this.esAdmin 
+      ? this.pacienteSeleccionado!.id 
+      : (this.authService.getPacienteId() || 1);
+
     const body = {
       turnoId: turno.id,
-      pacienteId: this.authService.getPacienteId() || 1,
+      pacienteId: idDestino,
       profesionalId: Number(turno.profesionalId || turno.profesional_id || 1),
       especialidadId: Number(turno.especialidadId || turno.especialidad_id || this.espSeleccionada || 1),
       sedeId: Number(turno.sedeId || turno.sede_id || 1),
@@ -207,13 +271,19 @@ export class BuscarTurnoComponent implements OnInit {
       motivoConsulta: motivo
     };
 
-    console.log('Enviando payload de reserva con slot DISPONIBLE:', JSON.stringify(body));
-
     this.http.post<any>(`${this.apiUrl}/reserva`, body).subscribe({
       next: (respuesta) => {
-        console.log('Reserva confirmada con éxito:', respuesta);
         this.isLoading = false;
-        this.turnoConfirmado = { ...turno, ...respuesta, fechaHora: fechaSlot, motivoConsulta: motivo || respuesta?.motivoConsulta };
+        this.turnoConfirmado = { 
+          ...turno, 
+          ...respuesta, 
+          fechaHora: fechaSlot, 
+          motivoConsulta: motivo || respuesta?.motivoConsulta,
+          pacienteNombreCompleto: this.esAdmin && this.pacienteSeleccionado 
+            ? `${this.pacienteSeleccionado.apellido}, ${this.pacienteSeleccionado.nombre}`
+            : (this.authService.currentUser()?.nombreCompleto || 'Paciente'),
+          pacienteDni: this.esAdmin && this.pacienteSeleccionado ? this.pacienteSeleccionado.dni : ''
+        };
         this.turnoSeleccionado = null;
         this.mensajeExito = '¡Turno reservado exitosamente!';
         turno.estado = 'RESERVADO';
@@ -306,4 +376,4 @@ export class BuscarTurnoComponent implements OnInit {
     this.authService.logout();
     this.router.navigate(['/']);
   }
-}
+}
