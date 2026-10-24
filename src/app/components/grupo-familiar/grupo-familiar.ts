@@ -166,7 +166,12 @@ export class GrupoFamiliarComponent implements OnInit {
           isActive: true
         };
 
-        this.familiares = [...this.familiares, familiarNormalizado];
+        const existeIdx = this.familiares.findIndex(f => f.id === familiarNormalizado.id);
+        if (existeIdx >= 0) {
+          this.familiares[existeIdx] = familiarNormalizado;
+        } else {
+          this.familiares = [...this.familiares, familiarNormalizado];
+        }
         this.mensajeExito = `¡Familiar ${familiarNormalizado.nombre} ${familiarNormalizado.apellido} registrado exitosamente!`;
         this.cdr.detectChanges();
       },

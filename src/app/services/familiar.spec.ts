@@ -109,4 +109,17 @@ describe('FamiliarService', () => {
     const edad = service.calcularEdad(fechaIso);
     expect(edad).toBe(8);
   });
+
+  it('debe recurrir al almacenamiento local cuando el backend responde con error', () => {
+    let familiares: Familiar[] = [];
+
+    service.listarFamiliares(1).subscribe(res => {
+      familiares = res;
+    });
+
+    const req = httpMock.expectOne('http://localhost:8080/api/v1/pacientes/1/familiares');
+    req.flush('Error', { status: 404, statusText: 'Not Found' });
+
+    expect(Array.isArray(familiares)).toBe(true);
+  });
 });
