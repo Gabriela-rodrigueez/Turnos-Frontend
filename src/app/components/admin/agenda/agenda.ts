@@ -7,6 +7,7 @@ import { EspecialidadService, Especialidad } from '../../../services/especialida
 import { ProfesionalService, Profesional } from '../../../services/profesional';
 import { SedeService, Sede } from '../../../services/sede';
 import { AuthService } from '../../../services/auth';
+import { HistorialClinicoService, HistoriaClinicaResponse, RegistrarAtencionRequest } from '../../../services/historial-clinico';
 
 @Component({
   selector: 'app-agenda',
@@ -21,6 +22,7 @@ export class AgendaComponent implements OnInit {
   private profesionalService = inject(ProfesionalService);
   private sedeService = inject(SedeService);
   public authService = inject(AuthService);
+  private historialClinicoService = inject(HistorialClinicoService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
 
@@ -69,6 +71,24 @@ export class AgendaComponent implements OnInit {
     { key: 'FRIDAY', label: 'Viernes', selected: true },
     { key: 'SATURDAY', label: 'Sábado', selected: false }
   ];
+
+  // Modal de Atención Médica (Issue F-11)
+  modalAtencionAbierto: boolean = false;
+  turnoAtencion: TurnoAgenda | null = null;
+  atencionMotivo: string = '';
+  atencionDiagnostico: string = '';
+  atencionTratamiento: string = '';
+  atencionRecetas: string = '';
+  atencionEstudios: string = '';
+  atencionError: string = '';
+  atencionGuardando: boolean = false;
+
+  // Modal de Consulta de Historial Clínico de Pacientes (Issue F-11)
+  modalHistorialPrevioAbierto: boolean = false;
+  pacienteHistorialNombre: string = '';
+  historialPrevio: HistoriaClinicaResponse[] = [];
+  cargandoHistorialPrevio: boolean = false;
+  errorHistorialPrevio: string = '';
 
   ngOnInit(): void {
     this.detectarRolUsuario();
@@ -396,6 +416,104 @@ export class AgendaComponent implements OnInit {
   limpiarFecha(): void {
     this.fechaSeleccionada = '';
     this.cargarAgenda();
+  }
+
+  // =========================================================================
+  // ATENCIÓN MÉDICA Y EVOLUCIÓN CLÍNICA (Issue F-11)
+  // =========================================================================
+  abrirModalAtencion(turno: TurnoAgenda): void {
+    this.turnoAtencion = turno;
+    this.atencionMotivo = turno.motivoConsulta || '';
+    this.atencionDiagnostico = '';
+    this.atencionTratamiento = '';
+    this.atencionRecetas = '';
+    this.atencionEstudios = '';
+    this.atencionError = '';
+    this.atencionGuardando = false;
+    this.modalAtencionAbierto = true;
+  }
+
+  cerrarModalAtencion(): void {
+    this.modalAtencionAbierto = false;
+    this.turnoAtencion = null;
+    this.atencionError = '';
+  }
+
+  guardarAtencion(): void {
+    if (!this.turnoAtencion) return;
+
+    if (!this.atencionMotivo?.trim()) {
+      this.atencionError = 'El motivo de consulta es obligatorio.';
+      return;
+    }
+    if (!this.atencionDiagnostico?.trim()) {
+      this.atencionError = 'El diagnóstico clínico es obligatorio.';
+      return;
+    }
+    if (!this.atencionTratamiento?.trim()) {
+      this.atencionError = 'Las indicaciones o tratamiento médico son obligatorios.';
+      return;
+    }
+
+    const payload: RegistrarAtencionRequest = {
+      motivoConsulta: this.atencionMotivo.trim(),
+      diagnostico: this.atencionDiagnostico.trim(),
+      tratamiento: this.atencionTratamiento.trim(),
+      recetasPrescritas: this.atencionRecetas?.trim() || undefined,
+      estudiosSolicitados: this.atencionEstudios?.trim() || undefined
+    };
+
+    this.atencionGuardando = true;
+    this.atencionError = '';
+
+    this.historialClinicoService.registrarAtencion(this.turnoAtencion.id, payload).subscribe({
+      next: (res: HistoriaClinicaResponse) => {
+        this.atencionGuardando = false;
+        if (this.turnoAtencion) {
+          this.turnoAtencion.estado = 'ASISTIDO';
+        }
+        this.modalAtencionAbierto = false;
+        this.mensajeExito = `¡Atención médica registrada exitosamente! Turno #${res.turnoId} marcado como ASISTIDO.`;
+        this.cdr.detectChanges();
+      },
+      error: (err: any) => {
+        this.atencionGuardando = false;
+        this.atencionError = err.error?.message || 'Error al guardar la evolución médica en el servidor.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  abrirHistorialPrevio(pacienteId?: number, nombrePaciente?: string): void {
+    if (!pacienteId) {
+      this.mensajeError = 'El turno no posee un paciente asociado para consultar su historial.';
+      return;
+    }
+
+    this.pacienteHistorialNombre = nombrePaciente || `Paciente #${pacienteId}`;
+    this.modalHistorialPrevioAbierto = true;
+    this.cargandoHistorialPrevio = true;
+    this.errorHistorialPrevio = '';
+    this.historialPrevio = [];
+
+    this.historialClinicoService.obtenerHistorialPorPaciente(pacienteId).subscribe({
+      next: (data: HistoriaClinicaResponse[]) => {
+        this.cargandoHistorialPrevio = false;
+        this.historialPrevio = data || [];
+        this.cdr.detectChanges();
+      },
+      error: (err: any) => {
+        this.cargandoHistorialPrevio = false;
+        this.errorHistorialPrevio = err.error?.message || 'No se pudo cargar el historial del paciente.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  cerrarHistorialPrevio(): void {
+    this.modalHistorialPrevioAbierto = false;
+    this.historialPrevio = [];
+    this.errorHistorialPrevio = '';
   }
 
   cerrarSesion(): void {

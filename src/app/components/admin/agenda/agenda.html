@@ -19,7 +19,7 @@
         <svg class="w-4 h-4 group-hover:rotate-90 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
         </svg>
-        <span>+ Generar Oferta de Turnos</span>
+        <span>Generar Oferta de Turnos</span>
       </button>
     </div>
 
@@ -289,7 +289,7 @@
         </div>
 
         <!-- Acciones Clínicas por Estado -->
-        <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-end space-x-2">
+        <div class="mt-4 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-end gap-2">
           <!-- Si está DISPONIBLE: Opción de eliminar slot libre -->
           <button 
             *ngIf="turno.estado === 'DISPONIBLE'"
@@ -298,27 +298,54 @@
             Eliminar Cupo
           </button>
 
-          <!-- Si está RESERVADO: Marcar Asistido y Cancelar Cita -->
+          <!-- Si está RESERVADO: Atender Paciente, Ver Historial, Marcar Asistido y Cancelar -->
+          <button 
+            *ngIf="turno.estado === 'RESERVADO'"
+            (click)="abrirModalAtencion(turno)"
+            class="px-3.5 py-1.5 rounded-lg text-xs font-bold text-white bg-[#004a8a] hover:bg-[#00386b] transition-colors shadow-xs cursor-pointer flex items-center space-x-1">
+            <span>🩺</span>
+            <span>Atender Paciente</span>
+          </button>
+
+          <button 
+            *ngIf="turno.estado === 'RESERVADO' && turno.pacienteId"
+            (click)="abrirHistorialPrevio(turno.pacienteId, turno.pacienteNombreCompleto)"
+            class="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-700 hover:bg-slate-100 border border-slate-300 transition-colors cursor-pointer flex items-center space-x-1"
+            title="Consultar antecedentes clínicos del paciente">
+            <span>📋</span>
+            <span>Historial</span>
+          </button>
+
           <button 
             *ngIf="turno.estado === 'RESERVADO'"
             (click)="marcarAsistido(turno)"
-            class="px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors shadow-xs cursor-pointer flex items-center space-x-1">
+            class="px-2.5 py-1.5 rounded-lg text-xs font-bold text-emerald-700 hover:bg-emerald-50 border border-emerald-300 transition-colors cursor-pointer flex items-center space-x-1"
+            title="Marcar como asistido sin registrar evolución">
             <span>✓</span>
-            <span>Marcar Asistido</span>
+            <span>Asistido</span>
           </button>
 
           <button 
             *ngIf="turno.estado === 'RESERVADO'"
             (click)="cancelarTurno(turno)"
-            class="px-3 py-1.5 rounded-lg text-xs font-bold text-rose-600 hover:bg-rose-50 border border-rose-200 transition-colors cursor-pointer">
-            Cancelar Cita
+            class="px-2.5 py-1.5 rounded-lg text-xs font-bold text-rose-600 hover:bg-rose-50 border border-rose-200 transition-colors cursor-pointer">
+            Cancelar
           </button>
 
           <!-- Estado ASISTIDO -->
-          <span *ngIf="turno.estado === 'ASISTIDO'" class="text-xs font-bold text-emerald-700 flex items-center space-x-1">
-            <span>✓</span>
-            <span>Atención completada</span>
-          </span>
+          <div *ngIf="turno.estado === 'ASISTIDO'" class="flex items-center space-x-2">
+            <span class="text-xs font-bold text-emerald-700 flex items-center space-x-1">
+              <span>✓</span>
+              <span>Atención completada</span>
+            </span>
+            <button 
+              *ngIf="turno.pacienteId"
+              (click)="abrirHistorialPrevio(turno.pacienteId, turno.pacienteNombreCompleto)"
+              class="px-2.5 py-1 rounded-md text-[11px] font-bold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-colors cursor-pointer flex items-center space-x-1">
+              <span>📋</span>
+              <span>Ver Historial</span>
+            </button>
+          </div>
 
           <!-- Estado CANCELADO -->
           <span *ngIf="turno.estado === 'CANCELADO'" class="text-xs font-medium text-slate-400 italic">
@@ -464,4 +491,272 @@
     </div>
   </div>
 
+  <!-- ========================================================================= -->
+  <!-- MODAL DE ATENCIÓN MÉDICA Y EVOLUCIÓN CLÍNICA (Issue F-11) -->
+  <!-- ========================================================================= -->
+  <div *ngIf="modalAtencionAbierto && turnoAtencion" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
+    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-2xl my-8 overflow-hidden animate-in fade-in zoom-in duration-200">
+      
+      <!-- Cabecera Modal -->
+      <div class="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-[#004a8a] text-xl shadow-2xs">
+            🩺
+          </div>
+          <div>
+            <h3 class="text-base font-black text-slate-800">Atención Médica y Registro Clínico</h3>
+            <p class="text-xs text-slate-500 font-medium">
+              Evolución clínica del Turno #{{ turnoAtencion.id }} • {{ turnoAtencion.especialidadNombre || 'Consulta' }}
+            </p>
+          </div>
+        </div>
+        <button 
+          (click)="cerrarModalAtencion()" 
+          class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-200 transition-colors cursor-pointer text-lg leading-none">
+          ✕
+        </button>
+      </div>
+
+      <!-- Resumen del Paciente & Botón Historial Previo -->
+      <div class="px-6 py-3 bg-blue-50/50 border-b border-blue-100 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div>
+          <span class="text-slate-500 font-medium">Paciente: </span>
+          <span class="font-bold text-slate-900">{{ turnoAtencion.pacienteNombreCompleto || 'Paciente' }}</span>
+          <span class="text-slate-400 mx-2">|</span>
+          <span class="text-slate-500 font-medium">Fecha/Hora: </span>
+          <span class="font-bold text-slate-900">
+            {{ turnoAtencion.fechaHoraInicio ? (turnoAtencion.fechaHoraInicio | date:'dd/MM/yyyy HH:mm') : turnoAtencion.fecha }} hs
+          </span>
+        </div>
+        <button 
+          *ngIf="turnoAtencion.pacienteId"
+          (click)="abrirHistorialPrevio(turnoAtencion.pacienteId, turnoAtencion.pacienteNombreCompleto)"
+          type="button"
+          class="px-3 py-1 rounded-md bg-white border border-[#004a8a] text-[#004a8a] hover:bg-blue-50 font-bold transition-colors cursor-pointer flex items-center space-x-1.5 shadow-2xs">
+          <span>📋</span>
+          <span>Consultar Antecedentes Previos</span>
+        </button>
+      </div>
+
+      <!-- Mensaje de Error en Modal -->
+      <div *ngIf="atencionError" class="mx-6 mt-4 p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700 flex items-center space-x-2">
+        <span>⚠️</span>
+        <span class="font-medium">{{ atencionError }}</span>
+      </div>
+
+      <!-- Formulario de Evolución -->
+      <form (ngSubmit)="guardarAtencion()" class="p-6 space-y-4 max-h-[65vh] overflow-y-auto">
+
+        <!-- Motivo de Consulta -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">
+            Motivo de Consulta <span class="text-rose-500">*</span>
+          </label>
+          <textarea 
+            [(ngModel)]="atencionMotivo" 
+            name="atencionMotivo"
+            rows="2"
+            placeholder="Causa o síntomas referidos por el paciente..."
+            class="w-full p-2.5 rounded-lg border border-slate-300 text-xs text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-[#004a8a] focus:outline-none"></textarea>
+        </div>
+
+        <!-- Diagnóstico Clínico -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">
+            Diagnóstico Clínico <span class="text-rose-500">*</span>
+          </label>
+          <textarea 
+            [(ngModel)]="atencionDiagnostico" 
+            name="atencionDiagnostico"
+            rows="3"
+            placeholder="Diagnóstico presuntivo o de certeza, observaciones clínicas..."
+            class="w-full p-2.5 rounded-lg border border-slate-300 text-xs text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-[#004a8a] focus:outline-none font-medium"></textarea>
+        </div>
+
+        <!-- Tratamiento e Indicaciones -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">
+            Tratamiento e Indicaciones Médicas <span class="text-rose-500">*</span>
+          </label>
+          <textarea 
+            [(ngModel)]="atencionTratamiento" 
+            name="atencionTratamiento"
+            rows="3"
+            placeholder="Pautas de tratamiento, recomendaciones, controles evolutivos..."
+            class="w-full p-2.5 rounded-lg border border-slate-300 text-xs text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-[#004a8a] focus:outline-none"></textarea>
+        </div>
+
+        <!-- Grilla: Recetas y Estudios Solicitados (Opcionales) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1 flex items-center space-x-1">
+              <span>💊</span>
+              <span>Recetas / Medicamentos Prescritos</span>
+            </label>
+            <textarea 
+              [(ngModel)]="atencionRecetas" 
+              name="atencionRecetas"
+              rows="2"
+              placeholder="Fármaco, dosis, frecuencia y duración..."
+              class="w-full p-2.5 rounded-lg border border-slate-300 text-xs text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-[#004a8a] focus:outline-none"></textarea>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1 flex items-center space-x-1">
+              <span>🔬</span>
+              <span>Estudios Solicitados / Prácticas</span>
+            </label>
+            <textarea 
+              [(ngModel)]="atencionEstudios" 
+              name="atencionEstudios"
+              rows="2"
+              placeholder="Laboratorio, radiografía, ecografía, derivación..."
+              class="w-full p-2.5 rounded-lg border border-slate-300 text-xs text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-[#004a8a] focus:outline-none"></textarea>
+          </div>
+        </div>
+
+        <!-- Footer Acciones -->
+        <div class="pt-4 border-t border-slate-200 flex items-center justify-end space-x-3">
+          <button 
+            type="button"
+            (click)="cerrarModalAtencion()" 
+            [disabled]="atencionGuardando"
+            class="px-4 py-2.5 rounded-lg border border-slate-300 text-slate-700 font-bold text-xs hover:bg-slate-50 transition-colors cursor-pointer">
+            Cancelar
+          </button>
+          <button 
+            type="submit" 
+            [disabled]="atencionGuardando"
+            class="px-5 py-2.5 rounded-lg bg-[#004a8a] hover:bg-[#00386b] text-white font-bold text-xs shadow-sm transition-colors cursor-pointer disabled:opacity-50 flex items-center space-x-2">
+            <span *ngIf="atencionGuardando" class="inline-block animate-spin rounded-full h-3.5 w-3.5 border-2 border-white border-t-transparent"></span>
+            <span>{{ atencionGuardando ? 'Registrando evolución...' : 'Guardar Atención y Finalizar Turno' }}</span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL DE HISTORIAL CLÍNICO PREVIO DEL PACIENTE (Issue F-11) -->
+  <!-- ========================================================================= -->
+  <div *ngIf="modalHistorialPrevioAbierto" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
+    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-3xl my-8 overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col max-h-[85vh]">
+      
+      <!-- Cabecera Modal -->
+      <div class="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-800 text-xl shadow-2xs">
+            📋
+          </div>
+          <div>
+            <h3 class="text-base font-black text-slate-800">Historial Clínico del Paciente</h3>
+            <p class="text-xs text-slate-500 font-medium">
+              Antecedentes y consultas previas • {{ pacienteHistorialNombre }}
+            </p>
+          </div>
+        </div>
+        <button 
+          (click)="cerrarHistorialPrevio()" 
+          class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-200 transition-colors cursor-pointer text-lg leading-none">
+          ✕
+        </button>
+      </div>
+
+      <!-- Contenido de Historial -->
+      <div class="p-6 overflow-y-auto flex-1 space-y-4">
+        
+        <!-- Estado de Carga -->
+        <div *ngIf="cargandoHistorialPrevio" class="py-12 flex flex-col items-center justify-center space-y-3">
+          <div class="w-8 h-8 border-3 border-[#004a8a] border-t-transparent rounded-full animate-spin"></div>
+          <p class="text-xs text-slate-500 font-bold">Cargando antecedentes médicos del paciente...</p>
+        </div>
+
+        <!-- Estado de Error -->
+        <div *ngIf="!cargandoHistorialPrevio && errorHistorialPrevio" class="p-4 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 flex items-center space-x-2">
+          <span>⚠️</span>
+          <span>{{ errorHistorialPrevio }}</span>
+        </div>
+
+        <!-- Historial Vacío -->
+        <div *ngIf="!cargandoHistorialPrevio && !errorHistorialPrevio && historialPrevio.length === 0" class="py-12 text-center">
+          <span class="text-4xl block mb-2">📂</span>
+          <p class="text-sm font-bold text-slate-700">Sin antecedentes médicos registrados</p>
+          <p class="text-xs text-slate-400 mt-1">Este paciente no posee consultas previas asentadas en el sistema hospitalario.</p>
+        </div>
+
+        <!-- Timeline de Evoluciones Médicas -->
+        <div *ngIf="!cargandoHistorialPrevio && historialPrevio.length > 0" class="space-y-4">
+          <div *ngFor="let item of historialPrevio" class="p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white hover:shadow-xs transition-all">
+            
+            <!-- Meta Cabecera de la Atención -->
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-2 mb-3">
+              <div class="flex items-center space-x-2 text-xs">
+                <span class="font-bold text-[#004a8a] bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                  {{ item.especialidadNombre || 'Consulta Médica' }}
+                </span>
+                <span class="text-slate-400">•</span>
+                <span class="font-bold text-slate-700">Dr/a. {{ item.profesionalNombreCompleto }}</span>
+              </div>
+              <div class="text-[11px] text-slate-500 flex items-center space-x-2">
+                <span>🏥 {{ item.sedeNombre || 'Sede Central' }}</span>
+                <span>•</span>
+                <span class="font-mono font-bold text-slate-700">
+                  {{ item.fechaAtencion ? (item.fechaAtencion | date:'dd/MM/yyyy HH:mm') : 'Fecha no registrada' }} hs
+                </span>
+              </div>
+            </div>
+
+            <!-- Cuerpo Clínico -->
+            <div class="space-y-2 text-xs">
+              <div *ngIf="item.motivoConsulta">
+                <span class="font-bold text-slate-600">Motivo: </span>
+                <span class="text-slate-800 italic">"{{ item.motivoConsulta }}"</span>
+              </div>
+
+              <div>
+                <span class="font-bold text-slate-800">Diagnóstico: </span>
+                <span class="text-slate-700">{{ item.diagnostico }}</span>
+              </div>
+
+              <div>
+                <span class="font-bold text-slate-800">Tratamiento / Indicaciones: </span>
+                <span class="text-slate-700">{{ item.tratamiento }}</span>
+              </div>
+
+              <div *ngIf="item.recetasPrescritas" class="p-2.5 rounded-lg bg-amber-50/70 border border-amber-200/60 text-amber-900 mt-2">
+                <span class="font-bold flex items-center space-x-1 mb-0.5">
+                  <span>💊</span>
+                  <span>Recetas Prescritas:</span>
+                </span>
+                <p class="whitespace-pre-line text-[11px]">{{ item.recetasPrescritas }}</p>
+              </div>
+
+              <div *ngIf="item.estudiosSolicitados" class="p-2.5 rounded-lg bg-sky-50/70 border border-sky-200/60 text-sky-900 mt-2">
+                <span class="font-bold flex items-center space-x-1 mb-0.5">
+                  <span>🔬</span>
+                  <span>Estudios Solicitados:</span>
+                </span>
+                <p class="whitespace-pre-line text-[11px]">{{ item.estudiosSolicitados }}</p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer Modal -->
+      <div class="px-6 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-end">
+        <button 
+          (click)="cerrarHistorialPrevio()" 
+          class="px-4 py-2 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs transition-colors cursor-pointer">
+          Cerrar
+        </button>
+      </div>
+
+    </div>
+  </div>
+
 </div>
+
