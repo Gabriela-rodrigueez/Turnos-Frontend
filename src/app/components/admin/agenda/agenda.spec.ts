@@ -6,6 +6,7 @@ import { EspecialidadService } from '../../../services/especialidad';
 import { ProfesionalService } from '../../../services/profesional';
 import { SedeService } from '../../../services/sede';
 import { AuthService } from '../../../services/auth';
+import { HistorialClinicoService } from '../../../services/historial-clinico';
 import { of } from 'rxjs';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
@@ -17,6 +18,7 @@ describe('AgendaComponent', () => {
   let profesionalServiceSpy: any;
   let sedeServiceSpy: any;
   let authServiceSpy: any;
+  let historialClinicoServiceSpy: any;
 
   beforeEach(async () => {
     agendaServiceSpy = {
@@ -57,6 +59,36 @@ describe('AgendaComponent', () => {
       })
     };
 
+    historialClinicoServiceSpy = {
+      registrarAtencion: vi.fn().mockReturnValue(of({
+        id: 100,
+        turnoId: 10,
+        pacienteId: 5,
+        diagnostico: 'Faringitis aguda',
+        tratamiento: 'Amoxicilina 500mg'
+      })),
+      obtenerHistorialPorPaciente: vi.fn().mockReturnValue(of([
+        {
+          id: 100,
+          turnoId: 10,
+          pacienteId: 5,
+          diagnostico: 'Gripe estacional',
+          tratamiento: 'Paracetamol',
+          fechaAtencion: '2026-10-01T10:00:00'
+        }
+      ])),
+      obtenerHistorialPaciente: vi.fn().mockReturnValue(of([
+        {
+          id: 100,
+          turnoId: 10,
+          pacienteId: 5,
+          diagnostico: 'Gripe estacional',
+          tratamiento: 'Paracetamol',
+          fechaAtencion: '2026-10-01T10:00:00'
+        }
+      ]))
+    };
+
     await TestBed.configureTestingModule({
       imports: [AgendaComponent],
       providers: [
@@ -65,7 +97,8 @@ describe('AgendaComponent', () => {
         { provide: EspecialidadService, useValue: especialidadServiceSpy },
         { provide: ProfesionalService, useValue: profesionalServiceSpy },
         { provide: SedeService, useValue: sedeServiceSpy },
-        { provide: AuthService, useValue: authServiceSpy }
+        { provide: AuthService, useValue: authServiceSpy },
+        { provide: HistorialClinicoService, useValue: historialClinicoServiceSpy }
       ]
     }).compileComponents();
 
@@ -174,5 +207,66 @@ describe('AgendaComponent', () => {
   it('debe cerrar sesión e invocar authService.logout', () => {
     component.cerrarSesion();
     expect(authServiceSpy.logout).toHaveBeenCalled();
+  });
+
+  it('debe abrir modal de atención médica y poblar los campos correctamente', () => {
+    const turnoMock: any = { id: 10, pacienteId: 5, pacienteNombreCompleto: 'Juan Pérez', motivoConsulta: 'Fiebre persistente' };
+    component.abrirModalAtencion(turnoMock);
+
+    expect(component.modalAtencionAbierto).toBe(true);
+    expect(component.turnoAtencion).toEqual(turnoMock);
+    expect(component.atencionMotivo).toBe('Fiebre persistente');
+    expect(component.atencionDiagnostico).toBe('');
+  });
+
+  it('debe validar campos obligatorios al intentar guardar atención médica', () => {
+    component.turnoAtencion = { id: 10, estado: 'RESERVADO' } as any;
+    component.atencionMotivo = '';
+    component.atencionDiagnostico = '';
+    component.atencionTratamiento = '';
+
+    component.guardarAtencion();
+    expect(component.atencionError).toContain('motivo de consulta es obligatorio');
+    expect(historialClinicoServiceSpy.registrarAtencion).not.toHaveBeenCalled();
+
+    component.atencionMotivo = 'Dolor de cabeza';
+    component.guardarAtencion();
+    expect(component.atencionError).toContain('diagnóstico clínico es obligatorio');
+
+    component.atencionDiagnostico = 'Cefalea tensional';
+    component.guardarAtencion();
+    expect(component.atencionError).toContain('tratamiento médico son obligatorios');
+  });
+
+  it('debe registrar atención médica, marcar turno como ASISTIDO y cerrar modal', () => {
+    const turnoMock: any = { id: 10, estado: 'RESERVADO' };
+    component.turnoAtencion = turnoMock;
+    component.modalAtencionAbierto = true;
+    component.atencionMotivo = 'Dolor de garganta';
+    component.atencionDiagnostico = 'Faringitis';
+    component.atencionTratamiento = 'Reposo y analgésicos';
+    component.atencionRecetas = 'Ibuprofeno 400mg';
+
+    component.guardarAtencion();
+
+    expect(historialClinicoServiceSpy.registrarAtencion).toHaveBeenCalledWith(10, {
+      motivoConsulta: 'Dolor de garganta',
+      diagnostico: 'Faringitis',
+      tratamiento: 'Reposo y analgésicos',
+      recetasPrescritas: 'Ibuprofeno 400mg',
+      estudiosSolicitados: undefined
+    });
+    expect(turnoMock.estado).toBe('ASISTIDO');
+    expect(component.modalAtencionAbierto).toBe(false);
+    expect(component.mensajeExito).toContain('Turno #10 marcado como ASISTIDO');
+  });
+
+  it('debe abrir modal de historial clínico y consultar antecedentes del paciente', () => {
+    component.abrirHistorialPrevio(5, 'Juan Pérez');
+
+    expect(component.modalHistorialPrevioAbierto).toBe(true);
+    expect(component.pacienteHistorialNombre).toBe('Juan Pérez');
+    expect(historialClinicoServiceSpy.obtenerHistorialPorPaciente).toHaveBeenCalledWith(5);
+    expect(component.historialPrevio.length).toBe(1);
   });
 });

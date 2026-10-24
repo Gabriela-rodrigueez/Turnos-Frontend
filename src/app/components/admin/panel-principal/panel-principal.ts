@@ -73,6 +73,12 @@ export class PanelPrincipalComponent implements OnInit {
   }
 
   imprimirTicket(): void {
-    window.print();
+    if (typeof document !== 'undefined') {
+      document.body.classList.add('imprimiendo-ticket');
+      window.print();
+      setTimeout(() => document.body.classList.remove('imprimiendo-ticket'), 1000);
+    } else {
+      window.print();
+    }
   }
 }

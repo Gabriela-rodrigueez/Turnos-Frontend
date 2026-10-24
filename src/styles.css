@@ -19,13 +19,23 @@
 }
 
 @media print {
-  body * {
+  /* Ocultar elementos de navegación, sidebars y botones interactivos */
+  aside,
+  nav,
+  button,
+  .no-print {
+    display: none !important;
+  }
+
+  /* Formato para impresión de ticket térmico en tótem/admisión cuando tenga la clase específica */
+  body.imprimiendo-ticket * {
     visibility: hidden !important;
   }
-  #thermal-ticket-print, #thermal-ticket-print * {
+  body.imprimiendo-ticket #thermal-ticket-print,
+  body.imprimiendo-ticket #thermal-ticket-print * {
     visibility: visible !important;
   }
-  #thermal-ticket-print {
+  body.imprimiendo-ticket #thermal-ticket-print {
     position: fixed;
     left: 0;
     top: 0;
@@ -37,4 +47,5 @@
     box-shadow: none !important;
   }
 }
+
 

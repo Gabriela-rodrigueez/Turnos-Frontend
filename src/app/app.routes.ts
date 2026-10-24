@@ -17,6 +17,9 @@ import { AdminGuard } from './guards/admin.guard';
 import { AuthGuard } from './guards/auth.guard';
 import { NoMedicoGuard } from './guards/no-medico.guard';
 
+import { HistorialClinicoComponent } from './components/historial-clinico/historial-clinico';
+import { MedicoConsultasComponent } from './components/medico/medico-consultas/medico-consultas';
+
 export const routes: Routes = [
   // Rutas públicas de entrada (Portal Ciudadano y Autenticación)
   { path: '', component: PortalComponent, pathMatch: 'full' },
@@ -35,15 +38,8 @@ export const routes: Routes = [
       { path: 'mis-turnos', component: MisTurnosComponent, canActivate: [AuthGuard] },
       { 
         path: 'mi-historial', 
-        component: ModuloPlaceholderComponent, 
-        canActivate: [AuthGuard],
-        data: {
-          titulo: 'Mi Historia Clínica y Recetas Digitales',
-          issue: 'F-11',
-          icono: '📁',
-          rol: 'PACIENTE / MÉDICO',
-          descripcion: 'Consulta de evolución clínica, recetas digitales con código de farmacia y descarga de estudios médicos en formato PDF.'
-        }
+        component: HistorialClinicoComponent, 
+        canActivate: [AuthGuard]
       },
 
       // Gestión de Agenda y Consultas Médicas
@@ -51,15 +47,8 @@ export const routes: Routes = [
       { path: 'admin/agenda', redirectTo: 'agenda', pathMatch: 'full' },
       { 
         path: 'medico/consultas', 
-        component: ModuloPlaceholderComponent, 
-        canActivate: [AdminGuard],
-        data: {
-          titulo: 'Atención Médica y Registro de Evolución Clínica',
-          issue: 'F-11',
-          icono: '🩺',
-          rol: 'MEDICO',
-          descripcion: 'Panel de consultorio para gestionar citas del día, redactar notas de evolución, emitir recetas digitales y solicitar estudios clínicos.'
-        }
+        component: MedicoConsultasComponent, 
+        canActivate: [AdminGuard]
       },
 
       // Rutas Módulo Administrativo
