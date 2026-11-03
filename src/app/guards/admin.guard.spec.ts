@@ -64,4 +64,26 @@ describe('AdminGuard', () => {
     expect(result).toBe(false);
     expect(routerSpy.navigate).toHaveBeenCalledWith(['/']);
   });
+
+  it('debe denegar acceso a MEDICO si la ruta requiere exclusivamente rol ADMINISTRADOR', () => {
+    authServiceSpy.isAuthenticated.mockReturnValue(true);
+    authServiceSpy.hasRole.mockImplementation((roles: string[]) => roles.includes('MEDICO'));
+
+    const routeMock = { data: { rol: 'ADMINISTRADOR' } } as any;
+    const result = TestBed.runInInjectionContext(() => AdminGuard(routeMock, {} as any));
+
+    expect(result).toBe(false);
+    expect(routerSpy.navigate).toHaveBeenCalledWith(['/']);
+  });
+
+  it('debe permitir acceso a ADMINISTRADOR si la ruta requiere rol ADMINISTRADOR', () => {
+    authServiceSpy.isAuthenticated.mockReturnValue(true);
+    authServiceSpy.hasRole.mockImplementation((roles: string[]) => roles.includes('ADMINISTRADOR') || roles.includes('ADMIN'));
+
+    const routeMock = { data: { rol: 'ADMINISTRADOR' } } as any;
+    const result = TestBed.runInInjectionContext(() => AdminGuard(routeMock, {} as any));
+
+    expect(result).toBe(true);
+    expect(routerSpy.navigate).not.toHaveBeenCalled();
+  });
 });
