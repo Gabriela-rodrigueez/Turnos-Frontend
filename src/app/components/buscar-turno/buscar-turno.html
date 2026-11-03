@@ -42,7 +42,7 @@
           <!-- Seccion 2: Profesional -->
           <div class="flex flex-col space-y-2">
             <label for="profesional" class="text-sm font-semibold text-gray-700">Profesional <span class="text-xs text-gray-500">(Opcional)</span></label>
-            <select id="profesional" name="profesional" [(ngModel)]="profSeleccionado" class="w-full h-11 px-3 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-[#004a8a]">
+            <select id="profesional" name="profesional" [(ngModel)]="profSeleccionado" (change)="onProfesionalChange()" class="w-full h-11 px-3 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-[#004a8a]">
               <option [ngValue]="null">Cualquier profesional</option>
               <option *ngFor="let prof of profesionales" [ngValue]="prof.id">{{ prof.nombre }} {{ prof.apellido }}</option>
             </select>
@@ -53,7 +53,7 @@
             <label for="sede" class="text-sm font-semibold text-gray-700">Sede <span class="text-xs text-gray-500">(Opcional)</span></label>
             <select id="sede" name="sede" [(ngModel)]="sedeSeleccionada" (change)="onSedeChange()" class="w-full h-11 px-3 rounded-lg border border-gray-300 bg-white text-sm focus:ring-2 focus:ring-[#004a8a]">
               <option [ngValue]="null">Todas las sedes</option>
-              <option *ngFor="let sede of sedes" [ngValue]="sede.id">{{ sede.nombre }}</option>
+              <option *ngFor="let sede of sedesDisponibles" [ngValue]="sede.id">{{ sede.nombre }}</option>
             </select>
           </div>
 

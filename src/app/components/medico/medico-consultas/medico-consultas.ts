@@ -31,16 +31,27 @@ export class MedicoConsultasComponent implements OnInit {
   errorHistorial: string = '';
 
   ngOnInit(): void {
-    this.cargarPacientes();
+    // Se elimina la carga automática (this.cargarPacientes) para que la tabla inicie vacía
   }
 
   cargarPacientes(): void {
+    // Si el médico no escribió nada y presiona buscar, no traemos a todos los pacientes
+    if (!this.filtroBusqueda || this.filtroBusqueda.trim() === '') {
+      this.pacientes = [];
+      this.mensajeError = 'Por favor, ingrese un nombre, apellido o número de documento para buscar.';
+      this.cdr.detectChanges();
+      return;
+    }
+
     this.cargandoPacientes = true;
     this.mensajeError = '';
 
-    this.historialService.obtenerPacientes(this.filtroBusqueda).subscribe({
+    this.historialService.obtenerPacientes(this.filtroBusqueda.trim()).subscribe({
       next: (data) => {
         this.pacientes = data || [];
+        if (this.pacientes.length === 0) {
+          this.mensajeError = 'No se encontraron pacientes con esos datos.';
+        }
         this.cargandoPacientes = false;
         this.cdr.detectChanges();
       },
@@ -59,8 +70,11 @@ export class MedicoConsultasComponent implements OnInit {
   }
 
   limpiarBusqueda(): void {
+    // Vaciamos el buscador y la tabla instantáneamente sin hacer peticiones al servidor
     this.filtroBusqueda = '';
-    this.cargarPacientes();
+    this.pacientes = [];
+    this.mensajeError = '';
+    this.cdr.detectChanges();
   }
 
   abrirHistorial(paciente: PacienteItem): void {

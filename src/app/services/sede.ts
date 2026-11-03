@@ -25,4 +25,14 @@ export class SedeService {
       })
     );
   }
+
+  // Nuevo método para obtener las sedes dinámicamente según la agenda (tabla turnos)
+  getSedesByProfesional(profesionalId: number): Observable<Sede[]> {
+    return this.http.get<Sede[]>(`${this.apiUrl}/profesional/${profesionalId}`).pipe(
+      catchError((err) => {
+        console.error(`Error al obtener sedes para el profesional ${profesionalId}:`, err);
+        return of([]); // Retorna un arreglo vacío en caso de error para no romper la vista
+      })
+    );
+  }
 }
