@@ -11,6 +11,7 @@ import { PanelPrincipalComponent } from './components/admin/panel-principal/pane
 import { NuevaCitaComponent } from './components/admin/nueva-cita/nueva-cita';
 import { RegistroValidacionComponent } from './components/admin/registro-validacion/registro-validacion';
 import { AgendaComponent } from './components/admin/agenda/agenda';
+import { EspecialidadesComponent } from './components/admin/especialidades/especialidades';
 import { MainLayoutComponent } from './components/shared/main-layout/main-layout';
 import { ModuloPlaceholderComponent } from './components/shared/modulo-placeholder/modulo-placeholder';
 import { AdminGuard } from './guards/admin.guard';
@@ -72,7 +73,7 @@ export const routes: Routes = [
       },
       { 
         path: 'admin/especialidades', 
-        component: ModuloPlaceholderComponent, 
+        component: EspecialidadesComponent, 
         canActivate: [AdminGuard],
         data: {
           titulo: 'Alta y Gestión de Especialidades Médicas',
