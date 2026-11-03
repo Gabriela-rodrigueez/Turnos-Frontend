@@ -134,6 +134,9 @@ export class BuscarTurnoComponent implements OnInit {
       this.sedeService.getSedesByProfesional(this.profSeleccionado).subscribe({
         next: (sedesDelTurno) => {
           this.sedesDisponibles = (sedesDelTurno && sedesDelTurno.length > 0) ? sedesDelTurno : [...this.sedes];
+          if (this.sedeSeleccionada && !this.sedesDisponibles.some((s) => s.id === this.sedeSeleccionada)) {
+            this.sedeSeleccionada = null;
+          }
           this.isCatalogLoading = false;
           this.cdr.detectChanges();
         },

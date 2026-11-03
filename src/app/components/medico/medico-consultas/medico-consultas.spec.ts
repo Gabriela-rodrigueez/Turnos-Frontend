@@ -79,10 +79,10 @@ describe('MedicoConsultasComponent', () => {
     fixture.detectChanges();
   });
 
-  it('debe crearse exitosamente y cargar la lista de pacientes', () => {
+  it('debe crearse exitosamente con la lista de pacientes vacía a la espera de búsqueda', () => {
     expect(component).toBeTruthy();
-    expect(historialServiceSpy.obtenerPacientes).toHaveBeenCalledWith('');
-    expect(component.pacientes.length).toBe(2);
+    expect(historialServiceSpy.obtenerPacientes).not.toHaveBeenCalled();
+    expect(component.pacientes.length).toBe(0);
     expect(component.cargandoPacientes).toBe(false);
   });
 
@@ -91,10 +91,11 @@ describe('MedicoConsultasComponent', () => {
     component.buscar();
 
     expect(historialServiceSpy.obtenerPacientes).toHaveBeenCalledWith('35111222');
+    expect(component.pacientes.length).toBe(2);
 
     component.limpiarBusqueda();
     expect(component.filtroBusqueda).toBe('');
-    expect(historialServiceSpy.obtenerPacientes).toHaveBeenCalledWith('');
+    expect(component.pacientes.length).toBe(0);
   });
 
   it('debe abrir modal de historial clínico y consultar antecedentes del paciente seleccionado', () => {
@@ -115,6 +116,7 @@ describe('MedicoConsultasComponent', () => {
 
   it('debe gestionar errores al cargar pacientes', () => {
     historialServiceSpy.obtenerPacientes.mockReturnValue(throwError(() => ({ error: { message: 'Fallo de red' } })));
+    component.filtroBusqueda = 'González';
     component.cargarPacientes();
 
     expect(component.cargandoPacientes).toBe(false);
