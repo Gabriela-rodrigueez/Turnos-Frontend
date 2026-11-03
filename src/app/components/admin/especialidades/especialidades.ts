@@ -220,3 +220,4 @@ export class EspecialidadesComponent implements OnInit {
     this.filtroTexto = '';
   }
 }
+

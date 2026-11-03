@@ -191,3 +191,4 @@ describe('EspecialidadesComponent', () => {
     expect(component.modalAbierto).toBe(false);
   });
 });
+
