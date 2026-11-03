@@ -45,6 +45,9 @@ describe('AgendaComponent', () => {
     sedeServiceSpy = {
       getSedes: vi.fn().mockReturnValue(of([
         { id: 1, nombre: 'Hospital Central' }
+      ])),
+      getSedesByProfesional: vi.fn().mockReturnValue(of([
+        { id: 1, nombre: 'Hospital Central' }
       ]))
     };
 
@@ -268,5 +271,14 @@ describe('AgendaComponent', () => {
     expect(component.pacienteHistorialNombre).toBe('Juan Pérez');
     expect(historialClinicoServiceSpy.obtenerHistorialPorPaciente).toHaveBeenCalledWith(5);
     expect(component.historialPrevio.length).toBe(1);
+  });
+
+  it('debe filtrar sedes disponibles al seleccionar un profesional médico', () => {
+    component.profesionalSeleccionado = 1;
+    component.onProfesionalChange();
+
+    expect(sedeServiceSpy.getSedesByProfesional).toHaveBeenCalledWith(1);
+    expect(component.sedesDisponibles.length).toBe(1);
+    expect(component.sedesDisponibles[0].nombre).toBe('Hospital Central');
   });
 });

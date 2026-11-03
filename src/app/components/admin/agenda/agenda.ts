@@ -30,6 +30,7 @@ export class AgendaComponent implements OnInit {
   especialidades: Especialidad[] = [];
   profesionales: Profesional[] = [];
   sedes: Sede[] = [];
+  sedesDisponibles: Sede[] = [];
 
   // Filtros de pantalla
   especialidadSeleccionada: number | null = null;
@@ -122,8 +123,12 @@ export class AgendaComponent implements OnInit {
     this.sedeService.getSedes().subscribe({
       next: (data) => {
         this.sedes = data || [];
+        this.sedesDisponibles = [...this.sedes];
         if (this.sedes.length > 0) {
           this.genSedeId = this.sedes[0].id;
+        }
+        if (this.profesionalSeleccionado) {
+          this.filtrarSedesPorProfesional(this.profesionalSeleccionado);
         }
         this.cdr.detectChanges();
       },
@@ -143,6 +148,43 @@ export class AgendaComponent implements OnInit {
     }
   }
 
+  onProfesionalChange(): void {
+    this.mensajeError = '';
+    this.mensajeExito = '';
+
+    if (!this.profesionalSeleccionado) {
+      this.sedesDisponibles = [...this.sedes];
+      this.cargarAgenda();
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.filtrarSedesPorProfesional(this.profesionalSeleccionado, true);
+  }
+
+  filtrarSedesPorProfesional(profesionalId: number, recargarAgenda: boolean = false): void {
+    this.sedeService.getSedesByProfesional(profesionalId).subscribe({
+      next: (data) => {
+        this.sedesDisponibles = (data && data.length > 0) ? data : [...this.sedes];
+        if (this.sedeSeleccionada && !this.sedesDisponibles.some((s) => s.id === this.sedeSeleccionada)) {
+          this.sedeSeleccionada = null;
+        }
+        if (recargarAgenda) {
+          this.cargarAgenda();
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error al filtrar sedes por profesional', err);
+        this.sedesDisponibles = [...this.sedes];
+        if (recargarAgenda) {
+          this.cargarAgenda();
+        }
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
   onEspecialidadChange(): void {
     this.mensajeError = '';
     this.mensajeExito = '';
@@ -151,13 +193,22 @@ export class AgendaComponent implements OnInit {
       this.profesionalService.getProfesionales(this.especialidadSeleccionada, this.sedeSeleccionada).subscribe({
         next: (data) => {
           this.profesionales = data || [];
+          if (this.profesionalSeleccionado && !this.profesionales.some((p) => p.id === this.profesionalSeleccionado)) {
+            this.profesionalSeleccionado = null;
+            this.onProfesionalChange();
+            return;
+          }
+          this.cargarAgenda();
           this.cdr.detectChanges();
         },
-        error: (err) => console.error('Error al cargar profesionales', err)
+        error: (err) => {
+          console.error('Error al cargar profesionales', err);
+          this.cargarAgenda();
+        }
       });
+    } else {
+      this.cargarAgenda();
     }
-
-    this.cargarAgenda();
   }
 
   cargarAgenda(limpiarMensajes: boolean = true): void {
