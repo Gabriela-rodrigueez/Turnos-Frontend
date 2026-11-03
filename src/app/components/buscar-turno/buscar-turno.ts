@@ -51,10 +51,10 @@ export class BuscarTurnoComponent implements OnInit {
   
   private apiUrl = 'http://localhost:8080/api/v1/turnos';
 
-  // Catálogos dinámicos cargados desde la API
   especialidades: Especialidad[] = [];
   profesionales: Profesional[] = [];
   sedes: Sede[] = [];
+  sedesDisponibles: Sede[] = [];
 
   turnosDisponibles: Turno[] = [];
 
@@ -71,7 +71,6 @@ export class BuscarTurnoComponent implements OnInit {
   mensajeError: string | null = null;
   mensajeExito: string | null = null;
 
-  // Estado para rol Administrador / Mesa de Entrada
   esAdmin = false;
   busquedaPaciente = '';
   buscandoPacientes = false;
@@ -89,7 +88,6 @@ export class BuscarTurnoComponent implements OnInit {
     this.cargarCatalogos();
   }
 
-  // Carga inicial de catálogos desde el backend
   cargarCatalogos(): void {
     this.isCatalogLoading = true;
     
@@ -100,17 +98,16 @@ export class BuscarTurnoComponent implements OnInit {
 
     this.sedeService.getSedes().subscribe((sedes) => {
       this.sedes = sedes || [];
+      this.sedesDisponibles = [...this.sedes];
       this.cdr.detectChanges();
     });
 
     this.cargarProfesionales();
   }
 
-  // Filtrado dinámico de profesionales según especialidad y sede seleccionadas
   cargarProfesionales(): void {
     this.profesionalService.getProfesionales(this.espSeleccionada, this.sedeSeleccionada).subscribe((profs) => {
       this.profesionales = profs || [];
-      // Si el profesional previamente seleccionado ya no pertenece a la lista filtrada, resetear
       if (this.profSeleccionado && !this.profesionales.some((p) => p.id === this.profSeleccionado)) {
         this.profSeleccionado = null;
       }
@@ -127,7 +124,29 @@ export class BuscarTurnoComponent implements OnInit {
     this.cargarProfesionales();
   }
 
-  // 1. Llamada real para consultar disponibilidad (Especialidad obligatoria)
+  onProfesionalChange(): void {
+    if (!this.profSeleccionado) {
+      this.sedesDisponibles = [...this.sedes];
+      this.cdr.detectChanges();
+    } else {
+      this.isCatalogLoading = true;
+      
+      this.sedeService.getSedesByProfesional(this.profSeleccionado).subscribe({
+        next: (sedesDelTurno) => {
+          this.sedesDisponibles = (sedesDelTurno && sedesDelTurno.length > 0) ? sedesDelTurno : [...this.sedes];
+          this.isCatalogLoading = false;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error('Error al cargar las sedes del profesional:', err);
+          this.sedesDisponibles = [...this.sedes];
+          this.isCatalogLoading = false;
+          this.cdr.detectChanges();
+        }
+      });
+    }
+  }
+
   buscar(): void {
     if (!this.espSeleccionada) {
       this.mensajeError = 'Por favor, seleccione una especialidad médica obligatoria para realizar la búsqueda.';
@@ -172,7 +191,6 @@ export class BuscarTurnoComponent implements OnInit {
     });
   }
 
-  // Métodos de Búsqueda y Asignación de Pacientes (Para Administradores)
   buscarPacientes(): void {
     if (!this.busquedaPaciente || !this.busquedaPaciente.trim()) {
       this.errorBusquedaPaciente = 'Por favor ingrese DNI, apellido o nombre.';
@@ -236,7 +254,6 @@ export class BuscarTurnoComponent implements OnInit {
     }
   }
 
-  // 2. Llamada real para confirmar y reservar el turno sobre slot preexistente
   confirmar(turno: any): void {
     if (!this.authService.isAuthenticated()) {
       this.router.navigate(['/login-paciente']);
